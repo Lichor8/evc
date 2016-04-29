@@ -1,0 +1,17 @@
+#create a new branch
+git branch <branch-name>
+
+#create a new branch and go to your new branch
+git checkout -b new_branch old_branch
+
+#add branch to remote origin (gitlab) and track changes (-u)?
+git push -u origin <branch-name>
+
+#to got to the new branch
+git checkout <branch-name>
+
+#return to master branch
+git checkout master
+
+#to show a list of all available local branches
+git branch
