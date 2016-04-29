@@ -1,0 +1,18 @@
+# requirements		#functions
+robot framework		!rpi communication arduino
+			motor control (arduino) (mandatory driver)
+			camera (rpi)
+			remote control (rpi)
+			development mode			
+			
+
+detection		!line
+			!trafic sign
+			
+movement		!drive in between lines (potential field)
+			(rotate)
+			turn
+			wait
+
+strategy		follow traffic signs
+			finish in time
