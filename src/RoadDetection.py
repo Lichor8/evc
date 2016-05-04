@@ -1,14 +1,10 @@
-# OpenCV_test1.py
-
-# this program opens the file in the same directory names "image.jpg" and displays the original image and a Canny edges of the original image
-
 import cv2
 import numpy as np
 import os
 
 ###################################################################################################
 def main():
-    imgOriginal =cv2.imread("../evc/roadtests/road0.jpg")               # open image
+    imgOriginal =cv2.imread("../roadtests/road0.jpg")               # open image
 
     if imgOriginal is None:                             # if image was not read successfully
         print ("error: image not read from file \n\n" )       # print error message to std out
@@ -50,5 +46,3 @@ def main():
 ###################################################################################################
 if __name__ == "__main__":
     main()
-
-
