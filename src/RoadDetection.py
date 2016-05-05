@@ -1,5 +1,3 @@
-# OpenCV_test1.py
-
 # this program opens the file in the same directory names "image.jpg" and displays the original image and a Canny edges of the original image
 
 import cv2
@@ -11,9 +9,9 @@ def main():
     imgOriginal =cv2.imread("../roadtests/road0.jpg")               # open image
 
     if imgOriginal is None:                             # if image was not read successfully
-        print ("error: image not read from file \n\n" )       # print error message to std out
-        os.system("pause")                                  # pause so user can see error message
-        return                                              # and exit function (which exits program)
+       print ("error: image not read from file \n\n" )       # print error message to std out
+       os.system("pause")                                  # pause so user can see error message
+    return                                              # and exit function (which exits program)
     # end if
 
     imgGrayscale = cv2.cvtColor(imgOriginal, cv2.COLOR_BGR2GRAY)        # convert to grayscale
@@ -34,19 +32,32 @@ def main():
         # filled in variables are (image, position starting point, position endpoint, color code, thickness of the drawn line
     cv2.imshow('houghlinesptest', imgOriginal)
 
-
    # cv2.namedWindow("imgOriginal", cv2.WINDOW_AUTOSIZE)        # create windows, use WINDOW_AUTOSIZE for a fixed window size
    # cv2.namedWindow("imgCanny", cv2.WINDOW_AUTOSIZE)           # or use WINDOW_NORMAL to allow window resizing
 
     #cv2.imshow("imgOriginal", imgOriginal)         # show windows
-    cv2.imshow("imgCanny", imgCanny)
+    #cv2.imshow("imgCanny", imgCanny)
+    while(True):
 
-    cv2.waitKey()                               # hold windows open until user presses a key
-    cv2.destroyAllWindows()                     # remove windows from memory
+        img = imgOriginal.copy()
+        k = cv2.waitKey(0)
+        lines = cv2.HoughLinesP(imgCanny, rho, theta, threshold, minLineLength, maxLineGap)
+        for x1, y1, x2, y2 in lines[1]:
+             cv2.line(imgOriginal, (x1, y1), (x2, y2), (0, 0, 255), 5)
+        cv2.imshow("houghlinesptest", img)
+    #cv2.namedWindow("houghtest", cv2.WINDOW_AUTOSIZE)
+        print("lijnen",lines)
 
-    return
+        if k == 27:  # esc is assigned as 27
+            break
 
-###################################################################################################
+
+       # cv2.waitKey()                               # hold windows open until user presses a key
+cv2.destroyAllWindows()                     # remove windows from memory
+
+    #      return
+
+########################################### ########################################################
 if __name__ == "__main__":
     main()
 
