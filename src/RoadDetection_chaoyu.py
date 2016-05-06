@@ -11,15 +11,15 @@ import cv2
 import numpy as np
 
 # import test image
-imgP = cv2.imread('../roadtests/road0.jpg')
-img = cv2.imread('../roadtests/road0.jpg')
+imgP = cv2.imread('../roadtests/artiroad1.jpg')
+img = cv2.imread('../roadtests/artiroad1.jpg')
 
 # blur image using a gaussian blur
 imgBlurred = cv2.GaussianBlur(img, (5, 5), 0)
 
 # define range of grey color in RGB
-lower_gray = np.array([220, 220, 220])
-upper_gray = np.array([250, 250, 250])
+lower_gray = np.array([0, 0, 0])
+upper_gray = np.array([25, 25, 25])
 
 # create grayscale image
 imgGrayscale = cv2.inRange(imgBlurred, lower_gray, upper_gray)
@@ -36,8 +36,8 @@ cv2.imshow('imgblurred', imgBlurred)
 rho = 1                 # accuracy [pixel]
 acc = 1                 # accuracy [deg]
 theta = acc*np.pi/360
-threshold = 10          #
-minLineLength = 10      # line segments shorter than this are rejected
+threshold = 100          #
+minLineLength = 150      # line segments shorter than this are rejected
 maxLineGap = 20         # maximum allowed gap between line segments to treat them as single line
 
 # find lines in image using the (probabilistic) houghlines function
@@ -82,11 +82,11 @@ else:
     exitflag = 0  # houghlines function found no lines (error)
     print("error: no lines detected\n")
 
-# plot lines in original image
+#plot lines in original image
 cv2.imshow('houghlines', img)
 
 print("exitflag\n", exitflag)
 
-# press any key to terminate process
+#press any key to terminate process
 cv2.waitKey(0)
 cv2.destroyAllWindows()
