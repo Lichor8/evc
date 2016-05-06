@@ -11,26 +11,26 @@ import cv2
 import numpy as np
 
 # import test image
-imgP = cv2.imread('../roadtests/road2.jpg')
-img = cv2.imread('../roadtests/road2.jpg')
+imgP = cv2.imread('../roadtests/artiroad0.png')
+img = cv2.imread('../roadtests/artiroad0.png')
 
 # blur image using a gaussian blur
 imgBlurred = cv2.GaussianBlur(img, (5, 5), 0)
 
 # define range of grey color in RGB
-lower_gray = np.array([220, 220, 220])
-upper_gray = np.array([250, 250, 250])
+# lower_gray = np.array([160, 160, 160])
+# upper_gray = np.array([250, 250, 250])
 
 # create grayscale image
-imgGrayscale = cv2.inRange(imgBlurred, lower_gray, upper_gray)
+# imgGrayscale = cv2.inRange(imgBlurred, lower_gray, upper_gray)
 
 # detect edges in image using canny
-# imgCanny = cv2.Canny(imgGrayscale, 50, 150, apertureSize=3)
+imgCanny = cv2.Canny(imgBlurred, 50, 150, apertureSize=3)
 
 # show all steps as images
-cv2.imshow('grayscaled', imgGrayscale)
+# cv2.imshow('grayscaled', imgGrayscale)
 cv2.imshow('imgblurred', imgBlurred)
-# cv2.imshow('imgcanny', imgCanny)
+cv2.imshow('imgcanny', imgCanny)
 
 # set heuristic parameters for the (probabilistic) houghlines function
 rho = 1                 # accuracy [pixel]
@@ -43,8 +43,8 @@ maxLineGap = 20         # maximum allowed gap between line segments to treat the
 # find lines in image using the (probabilistic) houghlines function
 # outputP:  x1, y1, x2, y2
 # output:   rho, theta
-linesP = cv2.HoughLinesP(imgGrayscale, rho, theta, threshold, minLineLength, maxLineGap)
-lines = cv2.HoughLines(imgGrayscale, rho, theta, threshold)
+linesP = cv2.HoughLinesP(imgCanny, rho, theta, threshold, minLineLength, maxLineGap)
+lines = cv2.HoughLines(imgCanny, rho, theta, threshold)
 
 # check if houghlinesP function found any lines, if not print error
 if linesP is not None:
