@@ -9,13 +9,40 @@
 # import necessary libraries
 import cv2
 import numpy as np
+# from collections import namedtuple
+
+# define classes
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+# Point = namedtuple('Point', 'y, x')   # point in cartesian coordinates
+
+# create instance of namedtuples and initialize
+imgSize = Point(0, 0)
+roiSize = Point(0, 0)
+roiGap = Point(0, 0)
 
 # import test image
 imgP = cv2.imread('../roadtests/artiroad0.png')
 img = cv2.imread('../roadtests/artiroad0.png')
 
+# region of interest (roi) directly in front of vehicle
+imgShape = img.shape
+imgSize.x = imgShape[1]     # save the size of the image in pixels
+imgSize.y = imgShape[0]
+roiSize.x = 50              # define size of roi window in percentage of total image size
+roiSize.y = 50
+roiGap.x = int(0.5*(imgSize.x - roiSize.x*imgSize.x/100))   # gap calculated as even spaces from image borders
+roiGap.y = int(imgSize.y - roiSize.y*imgSize.y/100)         # gap calculated as from the top of the image
+
+roi = img[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x]        # set roi
+imgRoi = np.zeros((imgSize.y, imgSize.x, 3), np.uint8)              # create new RGB black image
+imgRoi[:imgSize.y, :imgSize.x] = (255, 255, 255)                    # turn image white
+imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi     # add roi to white image
+
 # blur image using a gaussian blur
-imgBlurred = cv2.GaussianBlur(img, (5, 5), 0)
+imgBlurred = cv2.GaussianBlur(imgRoi, (5, 5), 0)
 
 # define range of grey color in RGB
 # lower_gray = np.array([160, 160, 160])
@@ -28,6 +55,7 @@ imgBlurred = cv2.GaussianBlur(img, (5, 5), 0)
 imgCanny = cv2.Canny(imgBlurred, 50, 150, apertureSize=3)
 
 # show all steps as images
+cv2.imshow('ROI', roi)
 # cv2.imshow('grayscaled', imgGrayscale)
 cv2.imshow('imgblurred', imgBlurred)
 cv2.imshow('imgcanny', imgCanny)
@@ -36,14 +64,15 @@ cv2.imshow('imgcanny', imgCanny)
 rho = 1                 # accuracy [pixel]
 acc = 1                 # accuracy [deg]
 theta = acc*np.pi/360
-threshold = 60          # minimum points on a line
-minLineLength = 10      # line segments shorter than this are rejected
-maxLineGap = 50         # maximum allowed gap between line segments to treat them as single line
+thresholdP = 10         # minimum points on a line
+threshold = 80          # minimum points on a line
+minLineLength = 2      # line segments shorter than this are rejected
+maxLineGap = 10         # maximum allowed gap between line segments to treat them as single line
 
 # find lines in image using the (probabilistic) houghlines function
 # outputP:  x1, y1, x2, y2
 # output:   rho, theta
-linesP = cv2.HoughLinesP(imgCanny, rho, theta, threshold, minLineLength, maxLineGap)
+linesP = cv2.HoughLinesP(imgCanny, rho, theta, thresholdP, minLineLength, maxLineGap)
 lines = cv2.HoughLines(imgCanny, rho, theta, threshold)
 
 # check if houghlinesP function found any lines, if not print error
