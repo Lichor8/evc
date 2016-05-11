@@ -24,21 +24,21 @@ roiSize = Point(0, 0)
 roiGap = Point(0, 0)
 
 # import test image
-imgP = cv2.imread('../roadtests/artiroad1.jpg')
-img = cv2.imread('../roadtests/artiroad1.jpg')
+img = cv2.imread('../roadtests/cornerrightinsane.jpg')
 
 # blur image using a gaussian blur
-imgBlurred = cv2.GaussianBlur(img, (5, 5), 0)
+imgBlurred = cv2.GaussianBlur(img, (15, 15), 0)
+gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
 
-# define range of grey color in RGB
-lower_gray = np.array([160, 160, 160])
-upper_gray = np.array([250, 250, 250])
+hist, bins = np.histogram(img.ravel(), 256, [0, 256])
 
-# create grayscale image
-imgGrayscale = cv2.inRange(imgBlurred, lower_gray, upper_gray)
+grayval = np.argmax(hist)
+
+thresh = grayval - 60
+th, dst = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
 
 # detect edges in image using canny
-imgCanny = cv2.Canny(imgGrayscale, 50, 150, apertureSize=3)
+imgCanny = cv2.Canny(dst, 50, 150, apertureSize=3)
 
 # region of interest (roi) directly in front of vehicle
 imgShape = img.shape
@@ -54,10 +54,12 @@ imgRoi = np.zeros((imgSize.y, imgSize.x), np.uint8)                 # create new
 imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi     # add roi to black image
 
 # show all steps as images
-# cv2.imshow('grayscaled', imgGrayscale)
-# cv2.imshow('imgblurred', imgBlurred)
-# cv2.imshow('imgcanny', imgCanny)
-# cv2.imshow('ROI', imgRoi)
+cv2.imshow('grayscaled', gray_image)
+cv2.imshow('imgblurred', imgBlurred)
+cv2.imshow('imgcanny', imgCanny)
+cv2.imshow('ROI', imgRoi)
+cv2.imshow('ORIGINAL', img)
+cv2.imshow('TRESHOLD', dst)
 
 # set heuristic parameters for the (probabilistic) houghlines function
 rho = 1                 # accuracy [pixel]
@@ -71,23 +73,7 @@ maxLineGap = 10         # maximum allowed gap between line segments to treat the
 # find lines in image using the (probabilistic) houghlines function
 # outputP:  x1, y1, x2, y2
 # output:   rho, theta
-linesP = cv2.HoughLinesP(imgRoi, rho, theta, thresholdP, minLineLength, maxLineGap)
 lines = cv2.HoughLines(imgRoi, rho, theta, threshold)
-
-# check if houghlinesP function found any lines, if not print error
-if linesP is not None:
-    exitflag = 1   # houghlines function found at least one line
-
-    # plot red(0, 0, 255) houghlines in image
-    for x in range(0, len(linesP)):
-        for x1, y1, x2, y2 in linesP[x]:
-            cv2.line(imgP, (x1, y1), (x2, y2), (0, 0, 255), 2)
-else:
-    exitflag = 0    # houghlinesP function found no lines (error)
-    print("error: no lines detected\n")
-
-# plot lines in original image
-#cv2.imshow('houghlinesP', imgP)
 
 xvalues = []
 
@@ -107,21 +93,21 @@ if lines is not None:
             x2 = int(x0 - 1000*(-b))
             y2 = int(y0 - 1000*(a))
             #print("theta: %f\t%f",theta)
-            if theta < np.pi/4:
+            if theta < np.pi/4 or theta > np.pi*3/4:
                 cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
                 xvalues.append((x1+x2)/2)
+
+    # calculate mean x pos (middle of lines)
+    xgo = int(np.mean(xvalues))
+    ygo = int(imgSize.y * 0.7)
+    xinit = int(imgSize.x / 2)
+    yinit = imgSize.y
+
+    # wanted trajectory if no corners detected // assume vehicle is positioned in middle of image
+    cv2.line(img, (xinit, yinit), (xgo, ygo), (255, 0, 0), 5)
 else:
     exitflag = 0  # houghlines function found no lines (error)
     print("error: no lines detected\n")
-
-# calculate mean x pos (middle of lines)
-xgo = int(np.mean(xvalues))
-ygo = int(imgSize.y*0.7)
-xinit = int(imgSize.x/2)
-yinit = imgSize.y
-
-# wanted trajectory if no corners detected // assume vehicle is positioned in middle of image
-cv2.line(img, (xinit, yinit), (xgo, ygo), (255, 0, 0), 5)
 
 # plot lines in original image
 cv2.imshow('houghlines', img)
