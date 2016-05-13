@@ -43,7 +43,8 @@ roiGap = Point(0, 0)
 
 # import test image
 img = cv2.imread('../roadtests/cornerrightinsane.jpg')
-intersectimg = img
+# avghough = cv2.imread('../roadtests/cornerrightinsane.jpg')
+# intersectimg = cv2.imread('../roadtests/cornerrightinsane.jpg')
 
 # blur image using a gaussian blur
 imgBlurred = cv2.GaussianBlur(img, (15, 15), 0)
@@ -108,22 +109,22 @@ if lines is not None:
 
     # Find angles that occur more than the treshold and save that angle
     treshold = 3
-    histangles = []
+    histangles = []         # Array for storing all angles from the histogram
     for i in range(0, len(thhist)):
-        if np.amax(thhist) > treshold:
-            anglepos = np.argmax(thhist)
-            angle = anglepos * np.pi / bins
-            thhist[anglepos] = 0
-            if anglepos - 1 >= 0:
-                thhist[anglepos - 1] = 0
+        if np.amax(thhist) > treshold:          # Found feasible maximum
+            anglepos = np.argmax(thhist)        # Get position of maximum
+            angle = anglepos * np.pi / bins     # Calculate value of maximum
+            thhist[anglepos] = 0                # Set histogram value to 0, so we won't find this maximum next iteration
+            if anglepos - 1 >= 0:               # Check if the position is in bounds of the histogram
+                thhist[anglepos - 1] = 0        # Set the neighbour values to zero as well
             if anglepos + 1 <= len(thhist):
                 thhist[anglepos + 1] = 0
-                histangles.append(angle)
+            histangles.append(angle)            # Append theta value of the peak to angle
 
-    all_angles = [[] for _ in range(len(histangles))]
-    tres = np.pi/bins
+    all_angles = [[] for _ in range(len(histangles))]   # Make an array with n arrays, for all found angles from hist
+    tres = np.pi/bins                                   # Define a certain treshold
 
-    #plot red(0, 0, 255) houghlines in image
+    # plot red(0, 0, 255) houghlines in image
     for x in range(0, len(lines)):
         for rho, theta in lines[x]:
             a = np.cos(theta)
@@ -134,67 +135,109 @@ if lines is not None:
             y1 = int(y0 + 1000*(a))
             x2 = int(x0 - 1000*(-b))
             y2 = int(y0 - 1000*(a))
-            cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-            #Compare theta with the histogram angle, if within certain interval, store in all_angles
+            # cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            # Compare theta with the histogram angle, if within certain interval, store in all_angles
             for i in range(0, len(histangles)):
                 if histangles[i]-tres < theta and theta < histangles[i]+tres:
                     all_angles[i].append([theta, rho])
 
-    rhovalues = [[] for _ in range(len(all_angles))]
+    rhovalues = [[] for _ in range(len(all_angles))]        # [[rho 1, ~rho 1, ...], [rho2, ~rho2, ...], ...]
 
     for i in range (0, len(all_angles)):
         rho = [x[1] for x in all_angles[i]]
-        bins = 12
+        bins = 12   # Number of bins for histogram of rho
+        # Histogram of rho (grouped per theta), from the minimum to the maximum of the rho set plus an offset of 200px
+        # This is done so we only see one 'peak' if there is one line instead of a roughly evenly distributed histogram
         rhohist, rhobins = np.histogram(rho, bins, [np.amin(rho)-100, np.amax(rho)+100])
 
         treshold = 3
 
         for j in range(0, len(rhohist)):
-            if np.amax(rhohist) > treshold:
-                rhopos = np.argmax(rhohist)
-                rho = rhobins[rhopos]
-                rhohist[rhopos] = 0
-                if rhopos - 1 >= 0:
-                    rhohist[rhopos - 1] = 0
+            if np.amax(rhohist) > treshold:     # Value must be found more than n times to be a feasible line
+                rhopos = np.argmax(rhohist)     # Find position of the maximum rho value in the histogram
+                rho = rhobins[rhopos]           # Find maximum value of rho
+                rhohist[rhopos] = 0             # Set histogram value to 0, so we won't find this maximum next iteration
+                if rhopos - 1 >= 0:             # Check if the position is in bounds of the histogram
+                    rhohist[rhopos - 1] = 0     # Set the neighbour values to zero as well
                 if rhopos + 1 <= len(rhohist):
                     rhohist[rhopos + 1] = 0
-                    rhovalues[i].append(rho)
+                rhovalues[i].append(rho)        # Append rho value of the peak to rhovalues
 
     line_amount = 0
-    for k in range (0, len(rhovalues)):
-        line_amount = line_amount + len(rhovalues[k])
+    for k in range (0, len(rhovalues)):         # Count how many different peaks of the rho histogram there are
+        line_amount += len(rhovalues[k])        # This is equal to the amount of lines
 
     all_values = [[] for _ in range(line_amount)]
 
     tres = 50
     extra_line = 0
+    line_counter = -1
 
-    for x in range(0, len(lines)):
-        for rho, theta in lines[x]:
-            for i in range(0, len(rhovalues)):
-                if len(rhovalues[i]) > 1:                       #Split array into two lines if multiple rho values
-                    for j in range(0, len(rhovalues[i])):
-                        if  rhovalues[i][j]-tres < rho and rho < rhovalues[i][j]+tres:
-                            all_values[j].append([theta, rho])
-                    extra_line = 1
+    for i in range(0, len(rhovalues)):              # Go through rhovalues e.g. [[218.5, 379.3], [595.5], [-627.0]]
+        if len(rhovalues[i]) > 1:                   # Split array into multiple lines if multiple rho values
+            for j in range(0, len(rhovalues[i])):   # Go through all rhovalues[i] e.g. [218.5, 379.3]
+                line_counter += 1                   # Counter of current line we are filling
+                for x in range(0, len(lines)):      # Go through all found houghlines
+                    for rho, theta in lines[x]:     # Set rho and theta
+                        if rhovalues[i][j]-tres < rho and rho < rhovalues[i][j]+tres:   # If rho is within treshold
+                            all_values[line_counter].append([theta, rho])               # Append to all_values
+        else:
+            line_counter += 1
+            all_values[line_counter] = all_angles[i]
 
-    for i in range(0, len(rhovalues)):
-        if len(rhovalues[i]) == 1:
-            all_values[i+extra_line] = all_angles[i]
+    avg_line_values = [[] for _ in range(line_amount)]
 
-    print(all_values[0])
-    print(all_values[1])
-    print(all_values[2])
-    print(all_values[3])
+    for i in range(0, line_amount):
+        avg_line_values[i] = [(sum([item[0] for item in all_values[i]])/len(all_values[i])),
+                              (sum([item[1] for item in all_values[i]])/len(all_values[i]))]
 
-    #TODO: make sure the script works for splitting into 3 lines as well and that all values are inserted into all_values with the right index
+    all_inter = []
+
+    for x in range(0, len(avg_line_values)):
+        rho = avg_line_values[x][1]
+        theta = avg_line_values[x][0]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 2000 * (-b))
+        y1 = int(y0 + 2000 * (a))
+        x2 = int(x0 - 2000 * (-b))
+        y2 = int(y0 - 2000 * (a))
+        # cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
+
+        L1 = line([x1, y1], [x2, y2])
+        inter = []
+        for x in range(0, len(avg_line_values)):
+            rho = avg_line_values[x][1]
+            theta = avg_line_values[x][0]
+            a = np.cos(theta)
+            b = np.sin(theta)
+            x0 = a * rho
+            y0 = b * rho
+            x1 = int(x0 + 2000 * (-b))
+            y1 = int(y0 + 2000 * (a))
+            x2 = int(x0 - 2000 * (-b))
+            y2 = int(y0 - 2000 * (a))
+            L2 = line([x1, y1], [x2, y2])
+            R = intersection(L1, L2)
+            if R:
+                # cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 10)
+                inter.append([R[0], R[1]])
+        all_inter.append(inter)
+
+    print(all_inter[0])
+    print(all_inter[1])
+    print(all_inter[2])
+    print(all_inter[3])
 
 else:
     exitflag = 0  # houghlines function found no lines (error)
     print("error: no lines detected\n")
 
-#plot lines in original image
+# plot lines in original image
 # cv2.imshow('houghlines', img)
+# cv2.imshow('average houghlines', avghough)
 # cv2.imshow('Intersections', intersectimg)
 
 print("exitflag\n", exitflag)
@@ -202,9 +245,3 @@ print("exitflag\n", exitflag)
 # press any key to terminate process
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-# L1 = line([x1, y1], [x2, y2])
-# L2 = line([x1, y1], [x2, y2])
-# R = intersection(L1, L2)
-# if R:
-#     cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 2)
