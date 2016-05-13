@@ -43,8 +43,8 @@ roiGap = Point(0, 0)
 
 # import test image
 img = cv2.imread('../roadtests/cornerrightinsane.jpg')
-avghough = cv2.imread('../roadtests/cornerrightinsane.jpg')
-intersectimg = cv2.imread('../roadtests/cornerrightinsane.jpg')
+# avghough = cv2.imread('../roadtests/cornerrightinsane.jpg')
+# intersectimg = cv2.imread('../roadtests/cornerrightinsane.jpg')
 
 # blur image using a gaussian blur
 imgBlurred = cv2.GaussianBlur(img, (15, 15), 0)
@@ -135,7 +135,7 @@ if lines is not None:
             y1 = int(y0 + 1000*(a))
             x2 = int(x0 - 1000*(-b))
             y2 = int(y0 - 1000*(a))
-            cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            # cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
             # Compare theta with the histogram angle, if within certain interval, store in all_angles
             for i in range(0, len(histangles)):
                 if histangles[i]-tres < theta and theta < histangles[i]+tres:
@@ -176,7 +176,7 @@ if lines is not None:
     for i in range(0, len(rhovalues)):              # Go through rhovalues e.g. [[218.5, 379.3], [595.5], [-627.0]]
         if len(rhovalues[i]) > 1:                   # Split array into multiple lines if multiple rho values
             for j in range(0, len(rhovalues[i])):   # Go through all rhovalues[i] e.g. [218.5, 379.3]
-                line_counter += 1                   #  Counter of current line we are filling
+                line_counter += 1                   # Counter of current line we are filling
                 for x in range(0, len(lines)):      # Go through all found houghlines
                     for rho, theta in lines[x]:     # Set rho and theta
                         if rhovalues[i][j]-tres < rho and rho < rhovalues[i][j]+tres:   # If rho is within treshold
@@ -191,6 +191,8 @@ if lines is not None:
         avg_line_values[i] = [(sum([item[0] for item in all_values[i]])/len(all_values[i])),
                               (sum([item[1] for item in all_values[i]])/len(all_values[i]))]
 
+    all_inter = []
+
     for x in range(0, len(avg_line_values)):
         rho = avg_line_values[x][1]
         theta = avg_line_values[x][0]
@@ -198,13 +200,14 @@ if lines is not None:
         b = np.sin(theta)
         x0 = a * rho
         y0 = b * rho
-        x1 = int(x0 + 1000 * (-b))
-        y1 = int(y0 + 1000 * (a))
-        x2 = int(x0 - 1000 * (-b))
-        y2 = int(y0 - 1000 * (a))
-        cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        x1 = int(x0 + 2000 * (-b))
+        y1 = int(y0 + 2000 * (a))
+        x2 = int(x0 - 2000 * (-b))
+        y2 = int(y0 - 2000 * (a))
+        # cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
         L1 = line([x1, y1], [x2, y2])
+        inter = []
         for x in range(0, len(avg_line_values)):
             rho = avg_line_values[x][1]
             theta = avg_line_values[x][0]
@@ -212,14 +215,21 @@ if lines is not None:
             b = np.sin(theta)
             x0 = a * rho
             y0 = b * rho
-            x1 = int(x0 + 1000 * (-b))
-            y1 = int(y0 + 1000 * (a))
-            x2 = int(x0 - 1000 * (-b))
-            y2 = int(y0 - 1000 * (a))
+            x1 = int(x0 + 2000 * (-b))
+            y1 = int(y0 + 2000 * (a))
+            x2 = int(x0 - 2000 * (-b))
+            y2 = int(y0 - 2000 * (a))
             L2 = line([x1, y1], [x2, y2])
             R = intersection(L1, L2)
             if R:
-                cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 10)
+                # cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 10)
+                inter.append([R[0], R[1]])
+        all_inter.append(inter)
+
+    print(all_inter[0])
+    print(all_inter[1])
+    print(all_inter[2])
+    print(all_inter[3])
 
 else:
     exitflag = 0  # houghlines function found no lines (error)
@@ -227,8 +237,8 @@ else:
 
 # plot lines in original image
 # cv2.imshow('houghlines', img)
-cv2.imshow('average houghlines', avghough)
-cv2.imshow('Intersections', intersectimg)
+# cv2.imshow('average houghlines', avghough)
+# cv2.imshow('Intersections', intersectimg)
 
 print("exitflag\n", exitflag)
 
