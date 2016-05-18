@@ -34,7 +34,7 @@ cv2.imshow('imgblurred', imgBlurred)
 
 # set heuristic parameters for the (probabilistic) houghlines function
 rho = 1                 # accuracy [pixel]
-acc = 1                 # accuracy [deg]
+acc = 5                # accuracy [deg]
 theta = acc*np.pi/360
 threshold = 100          #
 minLineLength = 150      # line segments shorter than this are rejected

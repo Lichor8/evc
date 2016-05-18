@@ -8,7 +8,7 @@ def ConcentrationDetection ( receivedpos_x, receivedpos_y, imgSize_x, imgSize_y)
 
     dstinv = np.invert(dst)
     roi = dstinv[(receivedpos_y - roirangey):(receivedpos_y + roirangey),(receivedpos_x - roirangex):(receivedpos_x + roirangex)]  # get roi from image
-    imgRoi = np.zeros((imgSize_y, imgSize_x), np.uint8)  # create new binary black image
+    # imgRoi = np.zeros((imgSize_y, imgSize_x), np.uint8)  # create new binary black image
     imgRoi[(receivedpos_y - roirangey):(receivedpos_y + roirangey),(receivedpos_x - roirangex):(receivedpos_x + roirangex)] = roi  # add roi to black image
 
     roiShape = roi.shape  # show the resolution of the roi
@@ -47,7 +47,7 @@ def ConcentrationDetection ( receivedpos_x, receivedpos_y, imgSize_x, imgSize_y)
 
 
 img = cv2.imread('../roadtests/cornerrightinsane.jpg')
-intersectimg = img
+# intersectimg = img
 
 # blur image using a gaussian blur
 imgBlurred = cv2.GaussianBlur(img, (15, 15), 0)
@@ -66,6 +66,7 @@ imgCanny = cv2.Canny(dst, 50, 150, apertureSize=3)
 imgShape = img.shape  # show the resolution of the image
 imgSize_x = imgShape[1]  # save the size of the image in pixels, this is used to create a black image
 imgSize_y = imgShape[0]
+imgRoi = np.zeros((imgSize_y, imgSize_x), np.uint8)
 receivedpos_x = [1200, 600, 200, 100]
 receivedpos_y = [230, 230, 100, 80 ]
 Location_xo = []
