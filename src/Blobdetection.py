@@ -5,57 +5,68 @@ import numpy as np
 im = cv2.imread("../roadtests/trafficsigns.jpg")
 im = cv2.resize(im, (0,0), fx=0.5, fy=0.5)
 
-# define range of blue color in HSV
+# define range of colors in HSV
 lower_blue = np.array([100, 0, 0])
 upper_blue = np.array([255, 100, 100])
 
-# Threshold the HSV image to get only blue colors
-mask = cv2.inRange(im, lower_blue, upper_blue)
+lower_yellow = np.array([0, 100, 100])
+upper_yellow = np.array([50, 255, 255])
+
+lower_red = np.array([0, 0, 100])
+upper_red = np.array([50, 50, 255])
+
+# Threshold the HSV image to get only certain colors
+maskblue = cv2.inRange(im, lower_blue, upper_blue)
+maskyellow = cv2.inRange(im, lower_yellow, upper_yellow)
+maskred = cv2.inRange(im, lower_red, upper_red)
 
 # Bitwise-AND mask and original image
-res = cv2.bitwise_and(im, im, mask=mask)
+blue = cv2.bitwise_and(im, im, mask=maskblue)
+yellow = cv2.bitwise_and(im, im, mask=maskyellow)
+red = cv2.bitwise_and(im, im, mask=maskred)
 
-# Setup SimpleBlobDetector parameters.
-params = cv2.SimpleBlobDetector_Params()
+thresh = 250
+th, c = cv2.threshold(maskyellow, thresh, 255, cv2.THRESH_BINARY)
 
-# Change thresholds
-params.minThreshold = 1
-params.maxThreshold = 255
+cv2.imshow("Blue channel", c)
 
-# Filter by Area.
-params.filterByArea = True
-params.minArea = 1500
+peri = cv2.arcLength(c, True)
+approx = cv2.approxPolyDP(c, 0.04 * peri, True)
 
-# Filter by Circularity
-params.filterByCircularity = True
-params.minCircularity = 0.1
+# if the shape is a triangle, it will have 3 vertices
+if len(approx) == 3:
+    shape = "triangle"
+    print(shape)
 
-# Filter by Convexity
-params.filterByConvexity = True
-params.minConvexity = 0.87
+# if the shape has 4 vertices, it is either a square or
+# a rectangle
+elif len(approx) == 4:
+    # compute the bounding box of the contour and use the
+    # bounding box to compute the aspect ratio
+    (x, y, w, h) = cv2.boundingRect(approx)
+    ar = w / float(h)
 
-# Filter by Inertia
-params.filterByInertia = True
-params.minInertiaRatio = 0.01
+    # a square will have an aspect ratio that is approximately
+    # equal to one, otherwise, the shape is a rectangle
+    shape = "square" if ar >= 0.95 and ar <= 1.05 else "rectangle"
+    print(shape)
 
-# Create a detector with the parameters
-detector = cv2.SimpleBlobDetector_create(params)
+# if the shape is a pentagon, it will have 5 vertices
+elif len(approx) == 5:
+    print("pentagon")
 
-# Detect blobs
-keypoints = detector.detect(res)
+# if the shape is a pentagon, it will have 5 vertices
+elif len(approx) == 6:
+    print("hexagon")
 
-print(keypoints)
-
-# Draw detected blobs as red circles.
-# cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS ensures
-# the size of the circle corresponds to the size of blob
-
-im_with_keypoints = cv2.drawKeypoints(im, keypoints, np.array([]), (0, 0, 255),
-                                      cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+# otherwise, we assume the shape is a circle
+else:
+    print("circle")
 
 # Show blobs
-cv2.imshow("Keypoints", im_with_keypoints)
-cv2.imshow('Mask', mask)
-cv2.imshow('Masked image', res)
+cv2.imshow("Blue channel", maskblue)
+cv2.imshow('Yellow channel', maskyellow)
+cv2.imshow('Red channel', maskred)
+cv2.imshow('Blob detected', im)
 
 cv2.waitKey(0)
