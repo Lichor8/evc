@@ -1,9 +1,6 @@
-import cv2
-import numpy as np
-
-# import computational entities functions
-from detection import lineclustering
+# import computational entities (functions)
 from detection import gapdetection
+# from detection import lineclustering
 
 
 class Detection:
@@ -13,40 +10,34 @@ class Detection:
         self.status = 1
         self.line = 0
 
-        # concentrationcheck
-        self.foundcorner = 0
-        self.foundgap = 0
-        self.location_x = 0
-        self.location_y = 0
+        # concentrationcheck (inputs/outputs)
 
-        # create object for each computational entity class
-        self.linecl = lineclustering.LineClustering()
-        # self.concheck = concentrationcheck.concentrationcheck()
+        # lineclustering (inputs/outputs)
 
     # monitor
-    def monitor(self):
-        return self.status
+    # def monitor(self):
+        # return self.status
 
     # configurator
-    def configurator(self, something):
-        self.linecl.setsomething(something)
+    # def configurator(self, something):
+        # self.linecl.setsomething(something)
 
     # setters
-    def setsomethinglincl(self, something):
-        self.linecl.setsomething(something)
+    # def setsomethinglincl(self, something):
+        # self.linecl.setsomething(something)
 
     # getters
-    def getline(self):
-        return self.line
+    # def getline(self):
+        # return self.line
 
     # coordinator/composer
     def detection(self):
+        # self.linecl.lineclustering()
+        # self.line = self.linecl.getline()
+
         # get camera images
 
-
         # run computational entities and retrieve outputs
-        self.linecl.lineclustering()
-        self.line = self.linecl.getline()
         gapdetection.gapdetection()
 
 

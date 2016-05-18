@@ -1,6 +1,10 @@
+# import OpenCV functions
 import cv2
+
+# import Numpy functions
 import numpy as np
 
+# import computational entities (functions)
 from detection import concentrationcheck
 
 

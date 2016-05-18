@@ -1,9 +1,3 @@
-# import OpenCV functions
-import cv2
-
-# import Numpy functions
-import numpy as np
-
 # import robot subsystems
 import detection.detection
 
@@ -21,15 +15,6 @@ while io_ok:
 
         # trigger coordinator/composer of detection
         det.detection()
-        # line = det.getline()
-        # print(line)
-
-        # status = det.monitor()
-        # print(status)
-
-        # something = 5
-        # det.setsomethinglincl(something)
-        # det.configurator(something)
 
         # stop main loop
         break
