@@ -29,26 +29,29 @@ def concentrationcheck(receivedpos_x, receivedpos_y, imgSize_x, imgSize_y, imgRo
     # print("totalvalue imgcanny \n",concentration_roi)
     Foundcorner = 0
     Foundgap = 0
-    Location_x = []  # those corner points are real ones
-    Location_y = []
+    gapposfuckrik_x = []  # those corner points are real ones
+    gapposfuckrik_y = []
+    cornerposfuckrik_x = []
+    cornerposfuckrik_y = []
 
     # this if else loop shows the threshold for finding a corner or a gap
     if concentration_roi > 0.05 * (roiSize_x * roiSize_y):  # the concentration of white should be at least 5% of the roi windowsize to decide wether or not this is a valid corner
         Foundcorner = 1
-        Location_x.append(receivedpos_x)  # after the check this x coordinate is a valide coordinate for a corner
-        Location_y.append(receivedpos_y)
+        cornerposfuckrik_x.append(receivedpos_x)  # after the check this x coordinate is a valide coordinate for a corner
+        cornerposfuckrik_y.append(receivedpos_y)
     else:
         Foundgap = 1
-        Location_x.append(receivedpos_x)
-        Location_y.append(receivedpos_x)
+        gapposfuckrik_x.append(receivedpos_x)
+        gapposfuckrik_y.append(receivedpos_y)
 
     # debug statements
     # print("Foundgap Foundcorner\n", Foundgap, Foundcorner)
     # print("Concentration \n", concentration_roi)
-    # print("Locationx Locationy\n", Location_x, Location_y)
+    # print("cornerpos_x cornerpos_y gappos_x gappos_y\n", cornerposfuckrik_x, cornerposfuckrik_y,gapposfuckrik_x,gapposfuckrik_y)
     # cv2.imshow('ROI', imgRoi)
     # cv2.imshow('TRESHOLD', dstinv)
     # cv2.waitKey(0)
     # cv2.destroyAllWindows()
 
-    return Foundcorner, Foundgap, Location_x, Location_y
+    # return Foundcorner, Foundgap, cornerposfuckrik_x,cornerposfuckrik_y,gapposfuckrik_x, gapposfuckrik_y
+    return Foundgap, cornerposfuckrik_x, cornerposfuckrik_y, gapposfuckrik_x, gapposfuckrik_y

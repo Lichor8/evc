@@ -16,7 +16,7 @@ while io_ok:
         # trigger coordinator/composer of detection
         det.detection()
         gappos = det.getgappos()
-        print(gappos)
+        print("correct gapposition",gappos)
 
         # stop main loop
         break

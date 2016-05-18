@@ -27,16 +27,18 @@ def gapdetection(img, gappos):
     Location_yo = []
     imgRoi = np.zeros((imgSize_y, imgSize_x), np.uint8)
     gappos = []
+    # print("empty gappos \n",gappos)
 
     # this for loop takes every valid corner position and save it in Location
     for i in range(0, len(gappos_x)):
-        [Foundcorner, Foundgap, Location_x, Location_y] = \
+        [Foundgap, cornerposfuckrik_x,cornerposfuckrik_y, gapposfuckrik_x, gapposfuckrik_y] = \
             concentrationcheck.concentrationcheck(gappos_x[i], gappos_y[i], imgSize_x, imgSize_y, imgRoi, dst)
 
-        Location_xo.append(Location_x)
-        Location_yo.append(Location_y)
+        Location_xo.append(cornerposfuckrik_x)
+        Location_yo.append(cornerposfuckrik_y)
 
-    # print("Reallocx \n Reallocy \n", Location_xo, Location_yo)
+    # debug prints
+    # print("Reallocx Reallocy \n", Location_xo, Location_yo)
     # print("Reallocx2 Reallocy2 \n",len(Location_xo),len(Location_yo))
 
     # This for loop places roi between the intersection (gaps)
@@ -45,10 +47,10 @@ def gapdetection(img, gappos):
             gappos_x = int(sum(Location_xo[-1] + Location_xo[0]) / 2)
             gappos_y = int(sum(Location_yo[-1] + Location_yo[0]) / 2)
 
-            [Foundcorner, Foundgap, Location_x, Location_y] = \
+            [Foundgap, cornerposfuckrik_x,cornerposfuckrik_y, gapposfuckrik_x, gapposfuckrik_y] = \
                 concentrationcheck.concentrationcheck(gappos_x, gappos_y, imgSize_x, imgSize_y, imgRoi, dst)
             if Foundgap == 1:
-                gappos.append([gappos_x, gappos_y])
+                gappos.append([gapposfuckrik_x, gapposfuckrik_y])
 
             # print("gappos_x, gappos_x-1,gappos_x0 \n", gappos_x,Location_xo[-1],Location_xo[0])
         elif i + 1 < len(Location_xo):
@@ -56,6 +58,10 @@ def gapdetection(img, gappos):
             gappos_y = int(sum(Location_yo[i] + Location_yo[i + 1]) / 2)
             # print("gappos_x, gappos_x-1,gappos_x0 \n", gappos_x, Location_xo[i], Location_xo[i + 1])
 
-            [Foundcorner, Foundgap, Location_x, Location_y] = \
+            [Foundgap, cornerposfuckrik_x,cornerposfuckrik_y,gapposfuckrik_x, gapposfuckrik_y] = \
                 concentrationcheck.concentrationcheck(gappos_x, gappos_y, imgSize_x, imgSize_y, imgRoi, dst)
+            if Foundgap == 1:
+                gappos.append([gapposfuckrik_x, gapposfuckrik_y])
+
+
     return gappos
