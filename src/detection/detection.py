@@ -1,3 +1,12 @@
+# import OpenCV functions
+import cv2
+
+# import Numpy functions
+import numpy as np
+
+# import libraries
+# from libs import defs
+
 # import computational entities (functions)
 from detection import gapdetection
 # from detection import lineclustering
@@ -10,7 +19,8 @@ class Detection:
         self.status = 1
         self.line = 0
 
-        # concentrationcheck (inputs/outputs)
+        # gapdetection (inputs/outputs)
+        self.gappos = []
 
         # lineclustering (inputs/outputs)
 
@@ -27,8 +37,8 @@ class Detection:
         # self.linecl.setsomething(something)
 
     # getters
-    # def getline(self):
-        # return self.line
+    def getgappos(self):
+        return self.gappos
 
     # coordinator/composer
     def detection(self):
@@ -36,8 +46,13 @@ class Detection:
         # self.line = self.linecl.getline()
 
         # get camera images
+        img = cv2.imread('../roadtests/cornerrightinsane.jpg')
 
         # run computational entities and retrieve outputs
-        gapdetection.gapdetection()
+        receivedpos_x = [1200, 600, 200, 100]
+        receivedpos_y = [230, 230, 100, 80]
+        receivedpos = [receivedpos_x, receivedpos_y]
+
+        self.gappos = gapdetection.gapdetection(img, receivedpos)
 
 

@@ -41,11 +41,14 @@ def concentrationcheck(receivedpos_x, receivedpos_y, imgSize_x, imgSize_y, imgRo
         Foundgap = 1
         Location_x.append(receivedpos_x)
         Location_y.append(receivedpos_x)
-    print("Foundgap Foundcorner\n", Foundgap, Foundcorner)
-    print("Concentration \n", concentration_roi)
-    print("Locationx Locationy\n", Location_x, Location_y)
-    cv2.imshow('ROI', imgRoi)
-    cv2.imshow('TRESHOLD', dstinv)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+
+    # debug statements
+    # print("Foundgap Foundcorner\n", Foundgap, Foundcorner)
+    # print("Concentration \n", concentration_roi)
+    # print("Locationx Locationy\n", Location_x, Location_y)
+    # cv2.imshow('ROI', imgRoi)
+    # cv2.imshow('TRESHOLD', dstinv)
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
+
     return Foundcorner, Foundgap, Location_x, Location_y
