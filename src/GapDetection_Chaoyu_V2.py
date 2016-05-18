@@ -66,10 +66,10 @@ imgShape = img.shape        # show the resolution of the image
 imgSize.x = imgShape[1]     # save the size of the image in pixels, this is used to create a black image
 imgSize.y = imgShape[0]
 
-receivedpos_x= 1200          # x_position of the intersection
-receivedpos_y = 300
+receivedpos_x= 200          # x_position of the intersection
+receivedpos_y = 80
 roirangex = int(0.05*imgSize.x)                # the window range of roi, it is currently choose as 100 pixel width
-roirangey = int(0.08*imgSize.y)
+roirangey = int(0.05*imgSize.y)
 dstinv=np.invert(dst)
 roi = dstinv[(receivedpos_y-roirangey):(receivedpos_y+roirangey),(receivedpos_x-roirangex):(receivedpos_x+roirangex) ]       # get roi from image
 imgRoi = np.zeros((imgSize.y, imgSize.x), np.uint8)                 # create new binary black image
@@ -80,19 +80,61 @@ roiSize_x = roiShape[1]     # save the size of the image in pixels, this is used
 roiSize_y = roiShape[0]
 # print("roishape \n",roiShape,"roix roiy \n", roiSize_x,roiSize_y)
 
-concentration_roi = 0       # initial concentration,
+concentration_roi = 0       # initial concentration,this for-loop counts the concentration in the roi
 for i in range(0,roiSize_y):        # loop over all entries of roi
     for j in range(0,roiSize_x):
         if roi[i][j]==255:          # if a white pixel is found thus value 255, then the concentration will become 1 higher
             concentration_roi=concentration_roi+1
 # print("totalvalue imgcanny \n",concentration_roi)
 FoundGap = 0
-if concentration_roi < 0.001*(roiSize_x * roiSize_y):  # the concentration of white should be at least 50% of the roi windowsize
-        FoundGap=1                                     # This means that the white value is lower than the limit thus the solid line is less than 0.1% in the roi window, thus there is probably no solid line hence a gap
+Goodcorner_x = [] # those corner points are real ones
+Goodcorner_y = []
+if concentration_roi > 0.05*(roiSize_x * roiSize_y):  # the concentration of white should be at least 5% of the roi windowsize to decide wether or not this is a valid corner
+        FoundGap=1
+        Goodcorner_x.append(receivedpos_x) #after the check this x coordinate is a valide coordinate for a corner
+        Goodcorner_y.append(receivedpos_y)
 print("Foundgap \n",FoundGap)
 print("Concentration \n",concentration_roi)
+print("goodcornerx goodcornery\n", Goodcorner_x, Goodcorner_y)
 
+for i in range (0,len(Goodcorner_x)): # this for loop places the roi between the detected corner then use roi to deciede wether or not a gap is detected
+    for j in range(0, len(Goodcorner_x)):
+        if abs(Goodcorner_x[i]-Goodcorner_x[j+1]) < 5:
+            receivedpos_x=(Goodcorner_x[i] + Goodcorner_x[j+1]) / 2
+            receivedpos_y=(Goodcorner_y[i] + Goodcorner_y[j+1]) / 2
+        #    Gapdetection(receivedpos_x,receivedpos_y)
+        if abs(Goodcorner_y[i]-Goodcorner_y[j+1]) < 5:
+            receivedpos_x = (Goodcorner_x[i] + Goodcorner_x[j + 1]) / 2
+            receivedpos_y = (Goodcorner_y[i] + Goodcorner_y[j + 1]) / 2
+            # Gapdetection(receivedpos_x, receivedpos_y)
+
+# shows the roi with green border
 # the upperborder
+# for i in range(0,len(Goodcorner_x)):
+#     xu1[i] = receivedpos_x - roirangex
+#     yu1[i] = receivedpos_y - roirangey
+#     xu2[i] = receivedpos_x + roirangex
+#     yu2[i] = receivedpos_y - roirangey
+#     cv2.line(img, (xu1[i], yu1[i]), (xu2[i], yu2[i]), (0, 255, 0), 2)
+#     # the leftborder
+#     xl1[i] = receivedpos_x - roirangex
+#     yl1[i] = receivedpos_y - roirangey
+#     xl2[i] = receivedpos_x - roirangex
+#     yl2[i] = receivedpos_y + roirangey
+#     cv2.line(img, (xl1[i], yl1[i]), (xl2[i], yl2[i]), (0, 255, 0), 2)
+#     # the  downborder
+#     xd1[i] = receivedpos_x - roirangex
+#     yd1[i] = receivedpos_y + roirangey
+#     xd2[i] = receivedpos_x + roirangex
+#     yd2[i] = receivedpos_y + roirangey
+#     cv2.line(img, (xd1[i], yd1[i]), (xd2[i], yd2[i]), (0, 255, 0), 2)
+#     # the rightborder
+#     xr1[i] = receivedpos_x + roirangex
+#     yr1[i] = receivedpos_y - roirangey
+#     xr2[i] = receivedpos_x + roirangex
+#     yr2[i] = receivedpos_y + roirangey
+#     cv2.line(img, (xr1[i], yr1[i]), (xr2[i], yr2[i]), (0, 255, 0), 2)
+# cv2.imshow('border', img)
 xu1 = receivedpos_x - roirangex
 yu1 = receivedpos_y - roirangey
 xu2 = receivedpos_x + roirangex
