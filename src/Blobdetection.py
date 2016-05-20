@@ -26,9 +26,9 @@ yellow = cv2.bitwise_and(im, im, mask=maskyellow)
 red = cv2.bitwise_and(im, im, mask=maskred)
 
 thresh = 250
-th, c = cv2.threshold(maskyellow, thresh, 255, cv2.THRESH_BINARY)
+dst = cv2.threshold(maskyellow, thresh, 255, cv2.THRESH_BINARY)[1]
 
-cv2.imshow("Blue channel", c)
+c = cv2.findContours(dst.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
 peri = cv2.arcLength(c, True)
 approx = cv2.approxPolyDP(c, 0.04 * peri, True)
