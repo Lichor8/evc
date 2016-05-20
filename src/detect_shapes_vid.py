@@ -6,26 +6,26 @@ import numpy as np
 
 # load the image and resize it to a smaller factor so that
 # the shapes can be approximated better
-cap = cv2.VideoCapture('/home/pi/Downloads/video3.h264')
+cap = cv2.VideoCapture('../roadtests/video3.mp4')
 
 while(cap.isOpened()):
     ret, frame = cap.read()
-    resized = imutils.resize(frame, width=500)
-    resized = cv2.GaussianBlur(resized, (7, 7), 0)
+    resized = imutils.resize(frame, width=300)
+    resized = cv2.GaussianBlur(resized, (5, 5), 0)
     ratio = frame.shape[0] / float(resized.shape[0])
 
     hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
 
     # define range of colors in HSV
-    lower_blue = np.array([100, 100, 100])
+    lower_blue = np.array([100, 120, 120])
     upper_blue = np.array([140, 255, 255])
 
     lower_yellow = np.array([40, 100, 100])
     upper_yellow = np.array([60, 255, 255])
 
-    lower_red = np.array([0, 100, 100])
+    lower_red = np.array([0, 120, 120])
     upper_red = np.array([10, 255, 255])
-    lower_red2 = np.array([160, 100, 100])
+    lower_red2 = np.array([160, 120, 120])
     upper_red2 = np.array([180, 255, 255])
 
     # Threshold the HSV image to get only certain colors
