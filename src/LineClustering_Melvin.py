@@ -10,6 +10,7 @@
 from __future__ import division
 import cv2
 import numpy as np
+import imutils
 # from collections import namedtuple
 
 # define classes
@@ -42,15 +43,17 @@ roiSize = Point(0, 0)
 roiGap = Point(0, 0)
 
 # import test image
-img = cv2.imread('../roadtests/cornerrightinsane.jpg')
-# avghough = cv2.imread('../roadtests/cornerrightinsane.jpg')
-# intersectimg = cv2.imread('../roadtests/cornerrightinsane.jpg')
+image = cv2.imread('../roadtests/cornerrightinsane.jpg')
+resized = imutils.resize(image, width=500)
+ratio = image.shape[0] / float(resized.shape[0])
+avghough = resized.copy()
+intersectimg = resized.copy()
 
 # blur image using a gaussian blur
-imgBlurred = cv2.GaussianBlur(img, (15, 15), 0)
+imgBlurred = cv2.GaussianBlur(resized, (15, 15), 0)
 gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
 
-hist, bins = np.histogram(img.ravel(), 256, [0, 256])
+hist, bins = np.histogram(resized.ravel(), 256, [0, 256])
 
 grayval = np.argmax(hist)
 
@@ -61,7 +64,7 @@ th, dst = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
 imgCanny = cv2.Canny(dst, 50, 150, apertureSize=3)
 
 # region of interest (roi) directly in front of vehicle
-imgShape = img.shape
+imgShape = resized.shape
 imgSize.x = imgShape[1]     # save the size of the image in pixels
 imgSize.y = imgShape[0]
 roiSize.x = 50              # define size of roi window in percentage of total image size
@@ -78,14 +81,14 @@ imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi     # add roi to
 # cv2.imshow('imgblurred', imgBlurred)
 # cv2.imshow('imgcanny', imgCanny)
 # cv2.imshow('ROI', imgRoi)
-# cv2.imshow('ORIGINAL', img)
+# cv2.imshow('ORIGINAL', resized)
 # cv2.imshow('TRESHOLD', dst)
 
 # set heuristic parameters for the (probabilistic) houghlines function
 rho = 1                 # accuracy [pixel]
 acc = 1                 # accuracy [deg]
 theta = acc*np.pi/360
-threshold = 50          # minimum points on a line
+threshold = int(200/ratio)     # minimum points on a line
 
 # find lines in image using the (probabilistic) houghlines function
 # outputP:  x1, y1, x2, y2
@@ -108,7 +111,7 @@ if lines is not None:
     thhist, thbins = np.histogram(theta, bins, [0, np.pi])
 
     # Find angles that occur more than the treshold and save that angle
-    treshold = 3
+    treshold = 0
     histangles = []         # Array for storing all angles from the histogram
     for i in range(0, len(thhist)):
         if np.amax(thhist) > treshold:          # Found feasible maximum
@@ -132,25 +135,25 @@ if lines is not None:
             x0 = a*rho
             y0 = b*rho
             x1 = int(x0 + 1000*(-b))
-            y1 = int(y0 + 1000*(a))
+            y1 = int(y0 + 1000*a)
             x2 = int(x0 - 1000*(-b))
-            y2 = int(y0 - 1000*(a))
-            # cv2.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            y2 = int(y0 - 1000*a)
+            cv2.line(resized, (x1, y1), (x2, y2), (0, 0, 255), 2)
             # Compare theta with the histogram angle, if within certain interval, store in all_angles
             for i in range(0, len(histangles)):
-                if histangles[i]-tres < theta and theta < histangles[i]+tres:
+                if histangles[i]-tres < theta < histangles[i]+tres:
                     all_angles[i].append([theta, rho])
 
     rhovalues = [[] for _ in range(len(all_angles))]        # [[rho 1, ~rho 1, ...], [rho2, ~rho2, ...], ...]
 
-    for i in range (0, len(all_angles)):
+    for i in range(0, len(all_angles)):
         rho = [x[1] for x in all_angles[i]]
-        bins = 12   # Number of bins for histogram of rho
+        bins = 24   # Number of bins for histogram of rho
         # Histogram of rho (grouped per theta), from the minimum to the maximum of the rho set plus an offset of 200px
         # This is done so we only see one 'peak' if there is one line instead of a roughly evenly distributed histogram
         rhohist, rhobins = np.histogram(rho, bins, [np.amin(rho)-100, np.amax(rho)+100])
 
-        treshold = 3
+        treshold = 0
 
         for j in range(0, len(rhohist)):
             if np.amax(rhohist) > treshold:     # Value must be found more than n times to be a feasible line
@@ -164,12 +167,14 @@ if lines is not None:
                 rhovalues[i].append(rho)        # Append rho value of the peak to rhovalues
 
     line_amount = 0
-    for k in range (0, len(rhovalues)):         # Count how many different peaks of the rho histogram there are
-        line_amount += len(rhovalues[k])        # This is equal to the amount of lines
+    for k in range(0, len(rhovalues)):         # Count how many different peaks of the rho histogram there are
+        line_amount += len(rhovalues[k])       # This is equal to the amount of lines
 
     all_values = [[] for _ in range(line_amount)]
 
-    tres = 50
+    print(line_amount)
+
+    tres = int(40/ratio)
     extra_line = 0
     line_counter = -1
 
@@ -179,8 +184,8 @@ if lines is not None:
                 line_counter += 1                   # Counter of current line we are filling
                 for x in range(0, len(lines)):      # Go through all found houghlines
                     for rho, theta in lines[x]:     # Set rho and theta
-                        if rhovalues[i][j]-tres < rho and rho < rhovalues[i][j]+tres:   # If rho is within treshold
-                            all_values[line_counter].append([theta, rho])               # Append to all_values
+                        if rhovalues[i][j]-tres < rho < rhovalues[i][j]+tres:   # If rho is within treshold
+                            all_values[line_counter].append([theta, rho])       # Append to all_values
         else:
             line_counter += 1
             all_values[line_counter] = all_angles[i]
@@ -204,7 +209,7 @@ if lines is not None:
         y1 = int(y0 + 2000 * (a))
         x2 = int(x0 - 2000 * (-b))
         y2 = int(y0 - 2000 * (a))
-        # cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
         L1 = line([x1, y1], [x2, y2])
         inter = []
@@ -222,23 +227,24 @@ if lines is not None:
             L2 = line([x1, y1], [x2, y2])
             R = intersection(L1, L2)
             if R:
-                # cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 10)
+                cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 10)
                 inter.append([R[0], R[1]])
         all_inter.append(inter)
 
-    print(all_inter[0])
-    print(all_inter[1])
-    print(all_inter[2])
-    print(all_inter[3])
+    if all_inter:
+        print(all_inter[0])
+        print(all_inter[1])
+        print(all_inter[2])
+        # print(all_inter[3])
 
 else:
     exitflag = 0  # houghlines function found no lines (error)
     print("error: no lines detected\n")
 
 # plot lines in original image
-# cv2.imshow('houghlines', img)
-# cv2.imshow('average houghlines', avghough)
-# cv2.imshow('Intersections', intersectimg)
+cv2.imshow('houghlines', resized)
+cv2.imshow('average houghlines', avghough)
+cv2.imshow('Intersections', intersectimg)
 
 print("exitflag\n", exitflag)
 

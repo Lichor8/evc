@@ -11,6 +11,7 @@ image = cv2.imread("../roadtests/stopndirection.png")
 
 resized = imutils.resize(image, width=500)
 ratio = image.shape[0] / float(resized.shape[0])
+th = 20     # treshold for center of direction sign
 
 hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
 
@@ -55,19 +56,43 @@ red = cv2.bitwise_and(resized, resized, mask=masks[1])
 yellow = cv2.bitwise_and(resized, resized, mask=masks[2])
 
 # cv2.imshow("Red", red)
-# cv2.imshow("Blue", blue)
+cv2.imshow("Blue", blue)
 # cv2.imshow("Yellow", yellow)
 
+bluecanny = cv2.Canny(maskblue, 170, 200)
+
+# detect circles in the image
+circles = cv2.HoughCircles(bluecanny, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=20,
+                           minRadius=int(60 / ratio), maxRadius=int(600 / ratio))
+# output = resized.copy()
+circlecenters = []
+
+# ensure at least some circles were found
+if circles is not None:
+    # convert the (x, y) coordinates and radius of the circles to integers
+    circles = np.round(circles[0, :]).astype("int")
+
+    # loop over the (x, y) coordinates and radius of the circles
+    for (x, y, r) in circles:
+        # draw the circle in the output image, then draw a rectangle
+        # corresponding to the center of the circle
+        # cv2.circle(output, (x, y), r, (0, 255, 0), 2)
+        # cv2.rectangle(output, (x - 2, y - 2), (x + 2, y + 2), (0, 128, 255), -1)
+        circlecenters.append([x*ratio, y*ratio])
+        # show the output image
+        # cv2.imshow("canny", bluecanny)
+        # cv2.imshow("output", output)
+
 channels = [blue, yellow, red]
-# convert the resized image to grayscale, blur it slightly,
-# and threshold it
+roi_dir = []
+# convert the resized image to grayscale, blur it slightly, and threshold it
 
 for i in range(0, len(channels)):
-    gray = cv2.cvtColor(channels[0], cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(channels[i], cv2.COLOR_BGR2GRAY)
     blurred = cv2.GaussianBlur(gray, (1, 1), 0)
     thresh = cv2.threshold(blurred, 50, 255, cv2.THRESH_BINARY)[1]
 
-    cv2.imshow("Tresh", thresh)
+    # cv2.imshow("Tresh", thresh)
     # cv2.waitKey(0)
 
     # find contours in the thresholded image and initialize the
@@ -87,15 +112,56 @@ for i in range(0, len(channels)):
             cY = int((M["m01"] / M["m00"]) * ratio)
             shape = sd.detect(c, i)
 
+            if shape is "direction":
+                for k in range(0, len(circlecenters)):
+                    if cX-th < circlecenters[k][0] < cX+th and cY-th < circlecenters[k][1] < cY+th:
+
+                        xlow = int((min([item[0][0] for item in c])))
+                        xhigh = int((max([item[0][0] for item in c])))
+                        ylow = int((min([item[0][1] for item in c])))
+                        yhigh = int((max([item[0][1] for item in c])))
+                        xhalf = xlow + int((xhigh-xlow)/2)
+                        yhalf = ylow + int((yhigh-ylow)/2)
+
+                        roi = maskblue[ylow:yhigh, xlow:xhigh]
+
+                        roi_tl = maskblue[ylow:yhalf, xlow:xhalf]
+                        roi_tr = maskblue[ylow:yhalf, xhalf:xhigh]
+                        roi_bl = maskblue[yhalf:yhigh, xlow:xhalf]
+                        roi_br = maskblue[yhalf:yhigh, xhalf:xhigh]
+
+                        pxtres = int((cv2.countNonZero(roi)*0.03))      # 3% is minimum difference between quarters
+
+                        pxtl = cv2.countNonZero(roi_tl)
+                        pxtr = cv2.countNonZero(roi_tr)
+                        pxbl = cv2.countNonZero(roi_bl)
+                        pxbr = cv2.countNonZero(roi_br)
+
+                        if pxtl+pxtres < pxtr and pxbl > pxbr+pxtres:
+                            shape = "dir left"
+                        elif pxtl > pxtr+pxtres and pxbl+pxtres < pxbr:
+                            shape = "dir right"
+                        else:
+                            shape = "dir straight"
+
+                        roi_dir.append([xlow, xhigh, ylow, yhigh])
+                        # cv2.imshow("ROI", roi)
+
+                    else:
+                        shape = "none"
+
             # multiply the contour (x, y)-coordinates by the resize ratio,
             # then draw the contours and the name of the shape on the image
             if shape is not "none":
                 c = c.astype("float")
                 c *= ratio
-                print(c)
                 c = c.astype("int")
                 cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-                cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+# print(roi_dir)
+# roi = image[xlow:xhigh, ylow:yhigh]
+# cv2.imshow("ROI", roi)
 
 # show the output image
 cv2.imshow("Image", image)
