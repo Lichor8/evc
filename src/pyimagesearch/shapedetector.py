@@ -18,10 +18,10 @@ class ShapeDetector:
 
         # if the shape has 4 vertices, it is either a square or
         # a rectangle
-        if len(approx) == 4 and channel == 1 and areamin < area < areamax:
+        if 5 >= len(approx) >= 4 and channel == 1 and areamin < area < areamax:
             shape = "uturn"
 
-        elif len(approx) >= 5 and channel == 2 and areamin < area < areamax:
+        elif 8 >= len(approx) >= 5 and channel == 2 and areamin < area < areamax:
             shape = "stop"
 
         # otherwise, we assume the shape is a circle

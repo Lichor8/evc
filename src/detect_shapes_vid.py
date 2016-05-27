@@ -6,27 +6,29 @@ import numpy as np
 
 # load the image and resize it to a smaller factor so that
 # the shapes can be approximated better
-cap = cv2.VideoCapture('../roadtests/video3.mp4')
+cap = cv2.VideoCapture('../roadtests/video3short.mp4')
 
-while(cap.isOpened()):
+while cap.isOpened():
     ret, frame = cap.read()
     image = frame
     resized = imutils.resize(image, width=500)
+    # resized = cv2.GaussianBlur(resized, (5, 5), 0)
+
     ratio = image.shape[0] / float(resized.shape[0])
-    th = 20  # treshold for center of direction sign
+    th = 100/ratio  # treshold for center of direction sign
 
     hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
 
     # define range of colors in HSV
-    lower_blue = np.array([100, 120, 120])
+    lower_blue = np.array([100, 100, 100])
     upper_blue = np.array([140, 255, 255])
 
-    lower_yellow = np.array([15, 100, 100])
-    upper_yellow = np.array([25, 255, 255])
+    lower_yellow = np.array([10, 130, 130])
+    upper_yellow = np.array([22, 180, 180])
 
     lower_red = np.array([0, 120, 120])
-    upper_red = np.array([10, 255, 255])
-    lower_red2 = np.array([160, 120, 120])
+    upper_red = np.array([5, 255, 255])
+    lower_red2 = np.array([165, 120, 120])
     upper_red2 = np.array([180, 255, 255])
 
     # Threshold the HSV image to get only certain colors
@@ -36,11 +38,12 @@ while(cap.isOpened()):
     maskred2 = cv2.inRange(hsv, lower_red2, upper_red2)
     maskred = maskred1 + maskred2
 
-    kernel = np.ones((5, 5), np.uint8)
-    maskbluedilated = cv2.dilate(maskblue, kernel, iterations=2)
-    maskreddilated = cv2.dilate(maskred, kernel, iterations=2)
+    kernel = np.ones((7, 7), np.uint8)
+    maskbluedil = cv2.dilate(maskblue, kernel, iterations=3)
+    maskreddil = cv2.dilate(maskred, kernel, iterations=3)
+    maskyellowdil = cv2.dilate(maskyellow, kernel, iterations=3)
 
-    masks = [maskbluedilated, maskreddilated, maskyellow]
+    masks = [maskbluedil, maskreddil, maskyellowdil]
 
     for i in range(0, len(masks)):
         # Copy the thresholded image.
@@ -56,6 +59,12 @@ while(cap.isOpened()):
         # Combine the two images to get the foreground.
         masks[i] = masks[i] | im_floodfill_inv
 
+    blue_forcircles = cv2.bitwise_and(resized, resized, mask=masks[0])
+
+    masks[0] = cv2.erode(masks[0], kernel, iterations=2)
+    masks[1] = cv2.erode(masks[1], kernel, iterations=2)
+    masks[2] = cv2.erode(masks[2], kernel, iterations=2)
+
     # Bitwise-AND mask and original image
     blue = cv2.bitwise_and(resized, resized, mask=masks[0])
     red = cv2.bitwise_and(resized, resized, mask=masks[1])
@@ -65,19 +74,14 @@ while(cap.isOpened()):
     cv2.imshow("Blue", blue)
     cv2.imshow("Yellow", yellow)
 
-    # bluecanny = cv2.Canny(maskbluedilated, 170, 200)
-    # cv2.imshow("Blue mask", maskblue)
-    # cv2.imshow("Blue canny", bluecanny)
-
     bluegray = cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
+    cv2.imshow("Blue gray", bluegray)
 
     # detect circles in the image
-    circles = cv2.HoughCircles(bluegray, cv2.HOUGH_GRADIENT, 1, 20, param1=50, param2=30,
-                               minRadius=int(0 / ratio), maxRadius=int(0 / ratio))
+    circles = cv2.HoughCircles(bluegray, cv2.HOUGH_GRADIENT, 1, 200, param1=50, param2=30,
+                               minRadius=int(15 / ratio), maxRadius=int(1500 / ratio))
     output = resized.copy()
     circlecenters = []
-
-
 
     # ensure at least some circles were found
     if (circles is not None) and (len(circles[0]) < 3):
@@ -90,10 +94,10 @@ while(cap.isOpened()):
             # corresponding to the center of the circle
             cv2.circle(output, (x, y), r, (0, 255, 0), 2)
             cv2.rectangle(output, (x - 2, y - 2), (x + 2, y + 2), (0, 128, 255), -1)
-            circlecenters.append([x * ratio, y * ratio])
+            circlecenters.append([x * ratio, y * ratio, r*ratio])
             # show the output image
             # cv2.imshow("canny", bluecanny)
-            cv2.imshow("output", output)
+            cv2.imshow("Houghcircles", output)
     else:
         circles = []
 
@@ -125,11 +129,15 @@ while(cap.isOpened()):
             if M["m00"] > 100:
                 cX = int((M["m10"] / M["m00"]) * ratio)
                 cY = int((M["m01"] / M["m00"]) * ratio)
+                blobarea = cv2.contourArea(c)*ratio
                 shape = sd.detect(c, i)
 
                 if shape == "dir-candidate":
                     for k in range(0, len(circlecenters)):
-                        if cX - th < circlecenters[k][0] < cX + th and cY - th < circlecenters[k][1] < cY + th:
+                        print([0.9*blobarea, circlecenters[k][2]**2*np.pi, 1.6*blobarea])
+                        print([cX, circlecenters[k][0], cY, circlecenters[k][1]])
+                        if cX - th < circlecenters[k][0] < cX + th and cY - th < circlecenters[k][1] < cY + th \
+                                and 0.9*blobarea < circlecenters[k][2]**2*np.pi < 1.6*blobarea:
 
                             xlow = int((min([item[0][0] for item in c])))
                             xhigh = int((max([item[0][0] for item in c])))
@@ -174,7 +182,8 @@ while(cap.isOpened()):
                     cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
                     cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
-    cv2.imshow("Image", image)
+    cv2.imshow("Video", image)
+
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 

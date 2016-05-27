@@ -33,7 +33,7 @@ def intersection(L1, L2):
     if D != 0:
         x = Dx / D
         y = Dy / D
-        return x,y
+        return x, y
     else:
         return False
 
@@ -227,15 +227,13 @@ if lines is not None:
             L2 = line([x1, y1], [x2, y2])
             R = intersection(L1, L2)
             if R:
-                cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 10)
+                cv2.circle(intersectimg, (int(R[0]), int(R[1])), 1, (0, 0, 255), 3)
                 inter.append([R[0], R[1]])
         all_inter.append(inter)
 
-    if all_inter:
-        print(all_inter[0])
-        print(all_inter[1])
-        print(all_inter[2])
-        # print(all_inter[3])
+    # all_inter contains the intersections per average line
+    for i in range(0, len(all_inter)):
+        print(all_inter[i])
 
 else:
     exitflag = 0  # houghlines function found no lines (error)
