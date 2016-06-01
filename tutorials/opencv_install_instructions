@@ -1,0 +1,4 @@
+#open terminal, go to the save dir of opencv_install.sh and run the following commands
+
+chmod +x opencv_install.sh
+./opencv_install.sh
