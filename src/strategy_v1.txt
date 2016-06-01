@@ -1,0 +1,99 @@
+## Pseudo code of detection & drive algorithm
+
+[Input:image, output: sign]
+Sign_detection.py
+If detected traffic sign for 5 consecutive frames:
+    Listen to traffic sign
+
+[Input: image, output: lines]
+Line_detection.py
+
+[Input: lines, output: direction average_lines]
+Line_clustering.py
+
+[Input: average lines, output: direction_vector]
+If detect no lines
+    Drive straight (same direction as before)
+
+If detect 1 line
+    Perspective correction
+    Check orientation
+    If /
+        Go right
+    If \
+        Go left
+    If -
+        Is close: (10% of bottom or something)
+            Choose left or right
+        Is not close:
+            Continue straight
+
+If detect 2 lines
+    Perform line_clustering
+    Check if lines parallel // (no intersects)
+    If parallel
+        Treat as one line (take closest or something?) - closest to middle of bottom
+        Check orientation
+        If /
+            Go right
+        If \
+            Go left
+        If -
+            Choose something
+    If not parallel
+        Is one line horizontal? Yes:
+            If /--
+                Go right
+            If --\
+                Go left
+        Is one line horizontal? No:
+            If /  \
+                Take x-average
+                Drive to x-average with certain y-step
+
+If detect 3 lines
+    Calculate amount of unique intersection points
+    If 0 points
+        Treat as one line, take closest
+    If 1 points     # two are parallel
+        Discard furthest of the 2 parallel lines
+        Is one line horizontal? Yes:
+            If /--
+                Go right
+            If --\
+                Go left
+        Is one line horizontal? No:
+            If /  \
+                Take x-average
+                Drive to x-average with certain y-step
+    If 2 points     # probably end of road
+        Perform gap detection along lines until points and between points
+    If 3 points     # probably end of road
+        Discard highest point
+        Perform gap detection along lines until points and between points
+
+If detect 4 lines
+    If 0 points
+        Discard obsolete lines
+    If 1 point
+        Discard obsolete lines
+    If 2 points
+        Discard obsolete lines
+    If 3 points
+        Discard obsolete line
+        Perform gap detection along lines until points and between points
+    If 4 points
+        Gap detection
+    If 5 points
+        Gap detection
+    If 6 points
+        Makes no sense
+
+If detect >4 lines
+    If found >2 horizontal lines
+        Keep closest 2
+    If found >1 lines on the right
+        Keep closest
+    If found >1 lines on left
+        Keep closest
+    Perform the 4 line algorithm
