@@ -1,0 +1,23 @@
+## Pseudo code of detection & drive algorithm
+
+[Input:image, output: sign]
+Sign_detection.py
+If detected traffic sign for 5 consecutive frames:
+    Listen to traffic sign
+
+[Input: image, output: lines]
+Line_detection.py
+
+[Input: lines, output: direction average_lines]
+Line_clustering.py
+
+[Input: average lines, output: direction_vector]
+If detect no lines
+    Drive straight (same direction as before)
+
+If detected lines
+    Discard horizontal lines above 10% from bottom
+    If found horizontal line:
+        Stop
+    If no horizontal line:
+        If theta
