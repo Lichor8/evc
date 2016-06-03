@@ -1,0 +1,27 @@
+### imutils
+## for python in virtualenvs
+1. in pycharm select interpreter as virtualenvs
+2. add (plus sign) imutils (this installs it directly under virtualenvs)
+
+## for python not in virtualenvs
+# install imutils for python3
+sudo pip3 install imutils
+
+# install imutils for python2.7
+sudo pip install imutils
+
+### pyserial
+## for python in virtualenvs
+1. in pycharm select interpreter as virtualenvs
+2. add (plus sign) pyserial (this installs it directly under virtualenvs)
+
+## for python not in virtualenvs
+# install pip3
+sudo apt-get install python3-pip
+
+# install pyserial for python3
+sudo pip3 install pyserial
+
+# install pyserial for python2.7
+sudo pip install pyserial
+
