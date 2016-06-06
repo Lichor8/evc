@@ -86,15 +86,28 @@ void loop() {
   theta_dot_d_l = (2*v - omega*L)/(2*R)
   
   // inner loop
-  
-  
-
-  // motor control  
   int MotorL = 0;
   int MotorR = 0;
-
-  setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
-  setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR);  
+  K = 1;
+  F = 1;
+  
+  for(i=0; i<20; i=i+1) {
+    r_l = theta_dot_d_l
+    x1_l = theta_dot_a_l
+    x2_l = dc_current_a_l
+    c_l = K*[x1_l; x2_l] + F*r_l
+    MotorL = 255*c_l
+    
+    r_r = theta_dot_d_r
+    x1_r = theta_dot_a_r
+    x2_r = dc_current_a_r
+    c_r = K*[x1_r; x2_r] + F*r_r    
+    MotorR = 255*c_r
+    
+    // motor control (minimum needed is 150?)
+    setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
+    setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR); 
+  }     
 } 
 
 void blink(int numberOfTimes){
