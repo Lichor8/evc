@@ -9,6 +9,9 @@
 # import necessary libraries
 import cv2
 import numpy as np
+import matplotlib
+matplotlib.use("agg")
+import matplotlib.pyplot as plt
 
 # define classes
 class Point:
@@ -39,6 +42,15 @@ print(grayval)
 
 thresh = grayval - 60
 th, dst = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
+
+rows, cols, ch = img.shape
+
+pts1 = np.float32([[56, 65], [368, 52], [28, 387], [389, 390]])
+pts2 = np.float32([[0, 0], [300, 0], [0, 300], [300, 300]])
+
+M = cv2.getPerspectiveTransform(pts1, pts2)
+
+dst = cv2.warpPerspective(img, M, (300, 300))
 
 cv2.imshow('ORIGINAL', img)
 cv2.imshow('TRESHOLD', dst)

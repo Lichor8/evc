@@ -11,6 +11,7 @@ from __future__ import division
 import cv2
 import numpy as np
 import imutils
+import math
 # from collections import namedtuple
 
 # define classes
@@ -56,11 +57,11 @@ while cap.isOpened():
     imgBlurred = cv2.GaussianBlur(resized, (15, 15), 0)
     gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
 
-    hist, bins = np.histogram(resized.ravel(), 256, [0, 256])
+    # hist, bins = np.histogram(resized.ravel(), 256, [0, 256])
 
-    grayval = np.argmax(hist)
+    grayval = 180   # np.argmax(hist)
 
-    thresh = grayval - 60
+    thresh = 120
     th, dst = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
 
     # detect edges in image using canny
@@ -85,13 +86,13 @@ while cap.isOpened():
     # cv2.imshow('imgcanny', imgCanny)
     # cv2.imshow('ROI', imgRoi)
     # cv2.imshow('ORIGINAL', resized)
-    # cv2.imshow('TRESHOLD', dst)
+    cv2.imshow('TRESHOLD', dst)
 
     # set heuristic parameters for the (probabilistic) houghlines function
     rho = 1  # accuracy [pixel]
     acc = 1  # accuracy [deg]
     theta = acc * np.pi / 360
-    threshold = int(100 / ratio)  # minimum points on a line
+    threshold = int(80 / ratio)  # minimum points on a line
 
     # find lines in image using the (probabilistic) houghlines function
     # outputP:  x1, y1, x2, y2
@@ -212,7 +213,12 @@ while cap.isOpened():
             y1 = int(y0 + 2000 * (a))
             x2 = int(x0 - 2000 * (-b))
             y2 = int(y0 - 2000 * (a))
+            x3 = int(imgSize.x/2)
+            y3 = imgSize.y
+            x4 = int(x3+2*math.tan(theta))
+            y4 = imgSize.y-20-int(1000/math.tan(theta))
             cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            cv2.line(avghough, (x3, y3), (x4, y4), (255, 0, 0), 2)
 
             L1 = line([x1, y1], [x2, y2])
             inter = []
@@ -242,12 +248,14 @@ while cap.isOpened():
     #     exitflag = 0  # houghlines function found no lines (error)
     #     print("error: no lines detected\n")
 
+    # print(avg_line_values)
+
     # plot lines in original image
     cv2.imshow('houghlines', resized)
     cv2.imshow('average houghlines', avghough)
-    cv2.imshow('Intersections', intersectimg)
+    # cv2.imshow('Intersections', intersectimg)
+    # cv2.imshow('frame', imgCanny)
 
-    cv2.imshow('frame', imgCanny)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
