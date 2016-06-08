@@ -162,3 +162,10 @@ void setMotor(const unsigned char cucPWM, const unsigned char cucFWD , const uns
 
   analogWrite(cucPWM, abs(ciSpeed));  
 }
+
+void sleep(float stime, float ts) {
+  float te = 0.0;  
+  while (abs(te-ts) < stime) {    
+    te = millis();
+  } 
+}
