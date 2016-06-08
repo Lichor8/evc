@@ -31,14 +31,15 @@ while cap.isOpened():
     imgSize.x = imgShape[1]     # save the size of the image in pixels
     imgSize.y = imgShape[0]
 
-    x1 = 580
-    y1 = 600
-    x2 = 990
-    y2 = 610
+    x_off = 700
+    x1 = x_off
+    y1 = 800
+    x2 = imgSize.x-x_off
+    y2 = y1
     x3 = 0
-    y3 = imgSize.y-100
+    y3 = imgSize.y
     x4 = imgSize.x
-    y4 = imgSize.y-60
+    y4 = imgSize.y
 
     cv2.circle(img, (x1, y1), 3, (0, 255, 0), 2)
     cv2.circle(img, (x2, y2), 3, (0, 255, 0), 2)
@@ -46,8 +47,8 @@ while cap.isOpened():
     cv2.circle(img, (x4, y4), 3, (0, 255, 0), 2)
 
     # rows, cols, ch = img.shape
-    W = 1000
-    H = 700
+    W = 800
+    H = 500
 
     pts1 = np.float32([[x1,y1],[x2,y2],[x3,y3],[x4,y4]])            # TL, TR, BL, BR
     pts2 = np.float32([[int(0.4*W), int(0.5*H)], [int(0.6*W), int(0.5*H)], [int(0.4*W), H], [int(0.6*W), H]])
@@ -56,7 +57,7 @@ while cap.isOpened():
 
     dst = cv2.warpPerspective(img, M, (W, H))
 
-    cv2.imshow('Input', img)
+    # cv2.imshow('Input', img)
     cv2.imshow('Output', dst)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
