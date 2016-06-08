@@ -61,9 +61,9 @@ void loop() {
   //}
   //delay(500);
   
-  //x_d = 
-  //y_d =
-  //phi_a =    
+  x_d = 10;
+  y_d = 10;
+  phi_a = 10;    
   
   // location2angle
   int phi_d = 0;
