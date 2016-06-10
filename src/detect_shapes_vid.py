@@ -3,6 +3,20 @@ from pyimagesearch.shapedetector import ShapeDetector
 import imutils
 import cv2
 import numpy as np
+import math
+
+# define classes
+class Point:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+# Point = namedtuple('Point', 'y, x')   # point in cartesian coordinates
+
+# create instance of namedtuples and initialize
+imgSize = Point(0, 0)
+
+pi_cam_x_angle = 54
+pi_cam_y_angle = 41
 
 # load the image and resize it to a smaller factor so that
 # the shapes can be approximated better
@@ -12,7 +26,14 @@ while cap.isOpened():
     ret, frame = cap.read()
     image = frame
     resized = imutils.resize(image, width=500)
+
+    imgShape = resized.shape
+    imgSize.x = imgShape[1]  # save the size of the image in pixels
+    imgSize.y = imgShape[0]
+
     # resized = cv2.GaussianBlur(resized, (5, 5), 0)
+
+    size_sign = 0.15     # absolute size of a traffic sign in m
 
     ratio = image.shape[0] / float(resized.shape[0])
     th = 100/ratio  # treshold for center of direction sign
@@ -70,12 +91,7 @@ while cap.isOpened():
     red = cv2.bitwise_and(resized, resized, mask=masks[1])
     yellow = cv2.bitwise_and(resized, resized, mask=masks[2])
 
-    cv2.imshow("Red", red)
-    cv2.imshow("Blue", blue)
-    cv2.imshow("Yellow", yellow)
-
     bluegray = cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
-    cv2.imshow("Blue gray", bluegray)
 
     # detect circles in the image
     circles = cv2.HoughCircles(bluegray, cv2.HOUGH_GRADIENT, 1, 200, param1=50, param2=30,
@@ -134,8 +150,8 @@ while cap.isOpened():
 
                 if shape == "dir-candidate":
                     for k in range(0, len(circlecenters)):
-                        print([0.9*blobarea, circlecenters[k][2]**2*np.pi, 1.6*blobarea])
-                        print([cX, circlecenters[k][0], cY, circlecenters[k][1]])
+                        # print([0.9*blobarea, circlecenters[k][2]**2*np.pi, 1.6*blobarea])
+                        # print([cX, circlecenters[k][0], cY, circlecenters[k][1]])
                         if cX - th < circlecenters[k][0] < cX + th and cY - th < circlecenters[k][1] < cY + th \
                                 and 0.9*blobarea < circlecenters[k][2]**2*np.pi < 1.6*blobarea:
 
@@ -173,15 +189,41 @@ while cap.isOpened():
                         else:
                             shape = "none"
 
+                if shape == "uturn" or shape == "stop" or shape == "dir left" or shape == "dir right" \
+                        or shape == "dir straight":
+                    x, y, w, h = cv2.boundingRect(c)
+                    x = int(x * ratio)
+                    y = int(y * ratio)
+                    w = int(w * ratio)
+                    h = int(h * ratio)
+                    cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    signratio = size_sign / h
+                    if y < 0.5 * imgSize.y:
+                        gamma = np.pi / 180 * abs(0.5 * imgSize.y - y) / imgSize.y * pi_cam_y_angle
+                        distance = signratio * abs(0.5 * imgSize.y - y) / math.tan(gamma)
+                    else:
+                        gamma = np.pi / 180 * abs(0.5 * imgSize.y - y - h) / imgSize.y * pi_cam_y_angle
+                        distance = signratio * abs(0.5 * imgSize.y - y - h) / math.tan(gamma)
+                    # print(shape, "sign -", "dist:", distance, "y-offset:", abs(0.5 * imgSize.y - y),
+                    #       "angle:", gamma)
+
                 # multiply the contour (x, y)-coordinates by the resize ratio,
                 # then draw the contours and the name of the shape on the image
-                if (shape is not "none") and (shape is not "dir-candidate"):
+                if shape == "uturn" or shape == "stop" or shape == "dir left" or shape == "dir right" \
+                        or shape == "dir straight":
                     c = c.astype("float")
                     c *= ratio
                     c = c.astype("int")
                     cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
                     cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                    disttext = str(round(distance, 3))+"m"
+                    cv2.putText(image, disttext, (cX, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
+    # cv2.imshow("Red", red)
+    # cv2.imshow("Blue", blue)
+    # cv2.imshow("Yellow", yellow)
+    # cv2.imshow("Blue gray", bluegray)
+    cv2.imshow("Treshold", thresh)
     cv2.imshow("Video", image)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
