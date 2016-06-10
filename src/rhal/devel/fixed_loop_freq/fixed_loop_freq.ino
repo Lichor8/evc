@@ -2,7 +2,7 @@ void setup() {
 }
 
 void loop() {
-  float pts = millis();
+  //float pts = millis();
   
   const int sfreq = 100;        // [1/s]
   const int pfreq = 1;          // [1/s]
