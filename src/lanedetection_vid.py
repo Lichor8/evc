@@ -15,11 +15,32 @@ import math
 # from collections import namedtuple
 
 # define classes
+
+
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
 # Point = namedtuple('Point', 'y, x')   # point in cartesian coordinates
+
+
+def line(p1, p2):
+    A = (p1[1] - p2[1])
+    B = (p2[0] - p1[0])
+    C = (p1[0]*p2[1] - p2[0]*p1[1])
+    return A, B, -C
+
+
+def intersection(L1, L2):
+    D  = L1[0] * L2[1] - L1[1] * L2[0]
+    Dx = L1[2] * L2[1] - L1[1] * L2[2]
+    Dy = L1[0] * L2[2] - L1[2] * L2[0]
+    if D != 0:
+        x = Dx / D
+        y = Dy / D
+        return x, y
+    else:
+        return False
 
 # create instance of namedtuples and initialize
 imgSize = Point(0, 0)
@@ -35,7 +56,7 @@ while cap.isOpened():
     imgSize.x = imgShape[1]  # save the size of the image in pixels
     imgSize.y = imgShape[0]
 
-    x_off = 0.37*imgSize.x
+    x_off = 0.36*imgSize.x
     x1 = x_off
     y1 = 0.75*imgSize.y
     x2 = imgSize.x - x_off
@@ -46,8 +67,9 @@ while cap.isOpened():
     y4 = imgSize.y
 
     # rows, cols, ch = img.shape
-    W = 720
-    H = 480
+    resizeratio = 3
+    W = int(imgSize.x/resizeratio)
+    H = int(imgSize.y/resizeratio)
 
     ratio = imgSize.x/W
 
@@ -63,16 +85,19 @@ while cap.isOpened():
     imgBlurred = cv2.GaussianBlur(dst, (5, 5), 0)
     gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
 
-    # thresh = 160
-    imgCanny = cv2.Canny(gray_image, 150, 250, apertureSize=3)
+    thresh = 120
+    th, tresholded = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
 
-    cv2.imshow('Canny', imgCanny)
+    imgCanny = cv2.Canny(tresholded, 150, 250, apertureSize=3)
+
+    # cv2.imshow('Tresholded', tresholded)
+    # cv2.imshow('Canny', imgCanny)
 
     imgShape = imgCanny.shape
     imgSize.x = imgShape[1]  # save the size of the image in pixels
     imgSize.y = imgShape[0]
     roiSize.x = 100  # define size of roi window in percentage of total image size
-    roiSize.y = 40
+    roiSize.y = 30
     roiGap.x = int(0.5 * (imgSize.x - roiSize.x * imgSize.x / 100))  # gap calculated as even spaces from image borders
     roiGap.y = int(imgSize.y - roiSize.y * imgSize.y / 100)  # gap calculated as from the top of the image
 
@@ -80,22 +105,23 @@ while cap.isOpened():
     imgRoi = np.zeros((imgSize.y, imgSize.x), np.uint8)  # create new binary black image
     imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi  # add roi to black image
 
-    cv2.imshow('Canny ROI', imgRoi)
+    # cv2.imshow('Canny ROI', imgRoi)
 
     # set heuristic parameters for the (probabilistic) houghlines function
     rho = 1     # accuracy [pixel]
     acc = 0.3   # accuracy [deg]
     theta = acc * np.pi / 360
-    threshold = int(200 / ratio)  # minimum points on a line
+    threshold = int(150 / ratio)  # minimum points on a line
 
     # find lines in image using the (probabilistic) houghlines function
     # outputP:  x1, y1, x2, y2
     # output:   rho, theta
     lines = cv2.HoughLines(imgRoi, rho, theta, threshold)
+    # lines = cv2.HoughLinesP(imgRoi, rho, acc, 100, minLineLength, maxLineGap)
 
     # check if houghlines function found any lines, if not print error
     if lines is not None:
-        exitflag = 1  # houghlines function found at least one line
+        exitflag = 1   # houghlines function found at least one line
 
         xvalues = []
         intersects = []
@@ -120,7 +146,8 @@ while cap.isOpened():
                     thhist[anglepos - 1] = 0  # Set the neighbour values to zero as well
                 if anglepos + 2 <= len(thhist):
                     thhist[anglepos + 1] = 0
-                if angle < 0.2*np.pi or angle > 0.8*np.pi:
+                # print(angle)
+                if not 0.733-0.1 < angle < 0.733+0.1 and not 2.356-0.1 < angle < 2.356+0.1 and not np.pi*0.45 < angle < np.pi*0.55:
                     histangles.append(angle)  # Append theta value of the peak to angle
 
         all_angles = [[] for _ in range(len(histangles))]  # Make an array with n arrays, for all found angles from hist
@@ -171,7 +198,7 @@ while cap.isOpened():
 
     all_values = [[] for _ in range(line_amount)]
 
-    print(line_amount)
+    # print(line_amount)
 
     tres = int(40 / ratio)
     extra_line = 0
@@ -213,9 +240,92 @@ while cap.isOpened():
         cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
         # cv2.line(avghough, (x3, y3), (x4, y4), (255, 0, 0), 2)
 
-    cv2.imshow('DST', dst)
-    cv2.imshow('avghough', avghough)
-    print(avg_line_values)
+    L1 = line([int(0.3*W), H-2], [int(0.7*W), H-2])
+    inter_left = []
+    inter_right = []
+
+    for x in range(0, len(avg_line_values)):
+        rho = avg_line_values[x][1]
+        theta = avg_line_values[x][0]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(x0 + 2000 * (-b))
+        y1 = int(y0 + 2000 * (a))
+        x2 = int(x0 - 2000 * (-b))
+        y2 = int(y0 - 2000 * (a))
+        L2 = line([x1, y1], [x2, y2])
+        R = intersection(L1, L2)
+        if R and theta < 0.5*np.pi:
+            if R[0] <= 0.5*W:
+                cv2.circle(avghough, (int(R[0]), int(R[1])), 1, (255, 0, 0), 8)
+                inter_left.append([0.5*W-R[0], R[1], theta])
+        elif R and theta > 0.5*np.pi:
+            if R[0] >= 0.5*W:
+                cv2.circle(avghough, (int(R[0]), int(R[1])), 1, (0, 255, 0), 8)
+                inter_right.append([R[0]-0.5*W, R[1], theta])
+
+    dvlength = 150     # direction vector length
+    min_wall_dist = 80     # minimum distance to wall 100px
+
+    go_to = [0, dvlength]    # initial if no lines detected
+
+    if inter_left and inter_right:
+        i = np.argmin([item[0] for item in inter_left])
+        j = np.argmin([item[0] for item in inter_right])
+
+        drive_angle_l = inter_left[i][2]
+        drive_angle_r = inter_right[i][2]
+
+        if -np.pi*0.1 < drive_angle_l-drive_angle_r < np.pi*0.1:    # angles similar, both lines same road
+            drive_angle = (drive_angle_r + drive_angle_l)/2
+            x2 = int(0.5 * W + dvlength * math.sin(drive_angle))
+            y2 = int(H - dvlength * math.cos(drive_angle))
+        else:       # probably in shitty situation, turn left fast
+            go_to = [-100, 10]
+
+    elif inter_left:
+        i = np.argmin([item[0] for item in inter_left])
+        drive_angle = inter_left[i][2]
+        offset = 0
+        if inter_left[i][0] < min_wall_dist:
+            offset = min_wall_dist - inter_left[i][0]
+        x1 = int(0.5 * W)
+        y1 = H
+        x2 = int(0.5 * W + offset + dvlength * math.sin(drive_angle))
+        y2 = int(H - dvlength * math.cos(drive_angle))
+        # cv2.line(avghough, (x1, y1), (x2, y2), (255, 0, 255), 2)
+        go_to = [x2 - 0.5 * W, H - y2]
+
+    elif inter_right:
+        i = np.argmin([item[0] for item in inter_right])
+        drive_angle = inter_right[i][2]
+        offset = 0
+        if inter_right[i][0] < min_wall_dist:
+            offset = min_wall_dist - inter_right[i][0]
+        x1 = int(0.5 * W)
+        y1 = H
+        x2 = int(0.5 * W - offset - dvlength * math.sin(drive_angle))
+        y2 = int(H + dvlength * math.cos(drive_angle))
+        # cv2.line(avghough, (x1, y1), (x2, y2), (0, 255, 255), 2)
+        go_to = [x2 - 0.5 * W, H - y2]
+
+    x1 = int(0.5 * W)
+    y1 = H
+    x2 = int(go_to[0] + 0.5*W)
+    y2 = int(H - go_to[1])
+    cv2.line(avghough, (x1, y1), (x2, y2), (255, 0, 255), 2)
+
+    # cv2.imshow('DST', dst)
+    # cv2.imshow('avghough', avghough)
+    # cv2.waitKey(0)
+
+    # print(all_angles)
+    # print(avg_line_values)
+    # print(inter_left)
+    # print(inter_right)
+    print(go_to)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
