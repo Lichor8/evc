@@ -80,7 +80,7 @@ void loop()
     const float sensor_freq   = 1000.0;            // sensor sample loop frequency     [1/s]
     const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
     
-    // recieve rpi information    
+    // receive rpi information    
     //char inData[20];   // Allocate some space for the string
     //char inChar = -1;  // Where to store the character read
     //byte index  = 0;   // Index into array; where to store the character
@@ -90,7 +90,7 @@ void loop()
     // Serial.read();
     //}
     
-    // recieve rpi information test
+    // receive rpi information test
     //if (Serial.available())  {
     //  blink(Serial.read() - '0');  // convert the character '1'-'9' to decimal 1-9
     //}

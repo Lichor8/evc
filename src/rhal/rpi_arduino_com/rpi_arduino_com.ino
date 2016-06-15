@@ -1,6 +1,7 @@
-char inData[20];   // Allocate some space for the string
-char inChar = -1;  // Where to store the character read
-byte index = 0;    // Index into array; where to store the character
+//#include <string.h>
+//#include <stdio.h>
+
+char rpiData[12];   // Allocate some space for the string
 
 void setup() {
     Serial.begin(9600);
@@ -8,36 +9,70 @@ void setup() {
 
 void loop()
 {
-    if (Comp("m1 on")==0) {
-        Serial.write("Motor 1 -> Online\n");
-    }
-    if (Comp("m1 off")==0) {
-        Serial.write("Motor 1 -> Offline\n");
+  int mov_type = -1;
+  int x_d = 0;
+  int y_d = 0;
+  int turn_deg = 0;
+  int stop_sec = 0;  
+  
+  //rpi2arduino(mov_type, x_d, y_d, turn_deg, stop_sec);
+  
+}
+
+void rpi2arduino(int &mov_type, int &x_d, int &y_d, int &turn_deg, int &stop_sec)
+{
+    while (Serial.available()) // Don't read unless
+    {
+      // read serial data from raspberry pi
+      //rpiData = Serial.read();
+      //rpiData = {'0', 'x', '127', '|', 'y', '135', '|'};
+      rpiData = "0x127|y135|";
+      
+      mov_type = rpiData[0] - '0';  // convert the character '1'-'9' to decimal 1-9
+      int end_index = 0;
+      int begin_index = 2;
+      
+      // if movement type is drive between lines (mov_type = 0) then read x and y position of goal point
+      //if(mov_type == 0 && strcmp(rpiData[1], 'x') == 0)
+      //{
+        //x_d = getdata(begin_index, rpiData, end_index);
+        
+        //if(mov_type == 0 && strcmp(rpiData[1 + end_index], 'y') == 0)
+        //{
+        //  y_d = getdata(begin_index + end_index, rpiData, end_index);
+        //}
+      //}
+      
+      // if movement type is turn (mov_type = 4) then read degrees
+      //if(mov_type == 4 && strcmp(rpiData[1], 'd') == 0)
+      //{
+      //  turn_deg = getdata(begin_index, rpiData, end_index);
+      //}
+      
+      // if movement type is stop (mov_type = 5) then read stop time
+      //if(mov_type == 5 && strcmp(rpiData[1], 't') == 0)
+      //{
+      //  stop_sec = getdata(begin_index, rpiData, end_index);
+      //}
     }
 }
 
-char Comp(char* This) {
-    while (Serial.available() > 0) // Don't read unless
-                                   // there you know there is data
-    {
-        if(index < 19) // One less than the size of the array
-        {
-            inChar = Serial.read(); // Read a character
-            inData[index] = inChar; // Store it
-            index++; // Increment where to write next
-            inData[index] = '\0'; // Null terminate the string
-        }
-    }
 
-    // string compare
-    if (strcmp(inData,This)  == 0) {
-        for (int i=0;i<19;i++) {
-            inData[i]=0;
-        }
-        index=0;
-        return(0);
+int getdata(int begin_index, char &rpiData, int &end_index)
+{
+  int k = 0;
+  int data[5];
+  while(rpiData[begin_index] != '|')
+    {
+      data[k] = rpiData[k+2]  - '0';
+      k++;
     }
-    else {
-        return(1);
-    }
+    end_index = k;
+    int l = 0;
+    while(k >= 0)
+      {
+        data = data + data[k-l]*10^l;
+        l++;
+      }
+  return data;
 }
