@@ -45,7 +45,7 @@ void loop()
   float y_d = 0.0;
   
   //location2angle
-  float phi_a = pi;   // using coordinate frame on the robot (relative) so actual is always pi
+  float phi_a = pi/2; // using coordinate frame on the robot (relative) so actual is always pi/2
   float x_a   = 0.0;  // using coordinate frame on the robot (relative) so actual is always 0
   float y_a   = 0.0;  // using coordinate frame on the robot (relative) so actual is always 0
   float phi_d = 0.0;  // initialize
@@ -81,6 +81,14 @@ void loop()
     const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
     
     // recieve rpi information    
+    //char inData[20];   // Allocate some space for the string
+    //char inChar = -1;  // Where to store the character read
+    //byte index  = 0;   // Index into array; where to store the character
+
+    //if (Serial.available())
+    //{
+    // Serial.read();
+    //}
     
     // recieve rpi information test
     //if (Serial.available())  {
@@ -297,7 +305,7 @@ void pcontrol(float phi_d, float phi_a, float &omega, float &v, float &e_old, fl
   omega = Kp*e;
   e_old = e;
   
-  v = 0.25;            // [m/s]
+  v = 0.0;            // [m/s]
 }
 
 void sleep(float sensor_time, float ts) {
