@@ -1,12 +1,21 @@
 import serial
 import time
 
+# In testing the Python script, it seems the problem is that the Arduino resets when you open the serial port
+# (at least the Uno does), so you need to wait a few seconds for it to start up.
+
 ser = serial.Serial('/dev/ttyUSB0', 9600)
+time.sleep(2)   # wait for Arduino
+
 while 1:
-    ser.write('0x127|y135|')
-    if ser.inWaiting() > 0:
-        print ser.readline()
+    ser.write('0x1127|y135|')
+    #ser.write('4d180|')
+    #ser.write('5t8|')
+    print(ser.readline())
 
-    time.sleep(1)
+    #if ser.inWaiting() > 0:
+    #bytesToRead = ser.inWaiting()
+    #print(ser.inWaiting())
+    #print(ser.read(bytesToRead))
 
-# try delay or buffersize?
+    #time.sleep(1)

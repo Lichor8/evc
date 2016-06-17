@@ -3,7 +3,7 @@ String rpiData; //"0x127|y135|";
 
 void setup() {
     Serial.begin(9600);
-    //Serial.setTimeout(timeout); 
+    Serial.setTimeout(timeout); 
     pinMode(13, OUTPUT);
     digitalWrite(13, HIGH);
 }
@@ -11,15 +11,15 @@ void setup() {
 void loop()
 {
   int mov_type = -1;
-  int x_d = 0;
-  int y_d = 0;
-  int turn_deg = 0;
-  int stop_sec = 0;
+  float x_d = 0;
+  float y_d = 0;
+  float turn_deg = 0;
+  float stop_sec = 0;
   
   rpi2arduino(mov_type, x_d, y_d, turn_deg, stop_sec);
 }
 
-void rpi2arduino(int &mov_type, int &x_d, int &y_d, int &turn_deg, int &stop_sec)
+void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_deg, float &stop_sec)
 {
   if(Serial.available()) // Don't read unless
   {
@@ -29,54 +29,61 @@ void rpi2arduino(int &mov_type, int &x_d, int &y_d, int &turn_deg, int &stop_sec
               
     mov_type = rpiData[0] - '0';  // convert the character '1'-'9' to decimal 1-9
     int end_index = 0;
-    int begin_index = 2;   
+    int begin_index = 2;    
         
     // if movement type is drive between lines (mov_type = 0) then read x and y position of goal point
-    if(rpiData[1] == 'x')//rpiData[1] == 'x'  //mov_type == 0
+    if(mov_type == 0 && rpiData[1] == 'x')//rpiData[1] == 'x'  //mov_type == 0
     {
-      //x_d = read_data(begin_index, rpiData, end_index);
-      Serial.println(5);
+      x_d = read_data(begin_index, rpiData, end_index);
+      Serial.println(x_d);
       digitalWrite(13, LOW);
           
-      //if(mov_type == 0 && strcmp(rpiData[1 + end_index], 'y') == 0)
-      //{
-      //  y_d = read_data(begin_index + end_index, rpiData, end_index);
-      //}
+      if(mov_type == 0 && rpiData[1 + end_index] == 'y')
+      {
+        y_d = read_data(begin_index + end_index, rpiData, end_index);
+        Serial.println(y_d);
+      }
     }
     
     // if movement type is turn (mov_type = 4) then read degrees
-    //if(mov_type == 4 && strcmp(rpiData[1], 'd') == 0)
-    //{
-    //  turn_deg = read_data(begin_index, rpiData, end_index);
-    //}
+    if(mov_type == 4 && rpiData[1] == 'd')
+    {
+      turn_deg = read_data(begin_index, rpiData, end_index);
+      Serial.println(turn_deg);
+    }
         
     // if movement type is stop (mov_type = 5) then read stop time
-    //if(mov_type == 5 && strcmp(rpiData[1], 't') == 0)
-    //{
-    //  stop_sec = read_data(begin_index, rpiData, end_index);
-    //}
+    if(mov_type == 5 && rpiData[1] == 't')
+    {
+      stop_sec = read_data(begin_index, rpiData, end_index);
+      Serial.println(stop_sec);
+    }
   }
 }
 
 
-int read_data(int begin_index, String rpiData, int &end_index)
+float read_data(int begin_index, String rpiData, int &end_index)
 {
   int k = 0;
   int data[5];
-  int data_num;
-  
+  float data_num = 0;
+    
   while(rpiData[begin_index + k] != '|')
   {
-    data[k] = rpiData[k+2]  - '0';
-    k++;
+    data[k] = rpiData[begin_index + k]  - '0';
+    //Serial.println(data[k]);
+    k++;    
   }
-  end_index = k;
+  end_index = begin_index + k; //3
+  //Serial.println(end_index);
     
   int l = 0;
-  while(k >= 0)
+  while(l < k)
   {
-    data_num = data_num + data[k-l]*10^l;
+    data_num = data_num + data[k-1-l]*pow(10,l);
+    //Serial.println(data_num);
     l++;
   }
+  //Serial.println(data_num);
   return data_num;
 }
