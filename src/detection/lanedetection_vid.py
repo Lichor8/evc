@@ -43,7 +43,7 @@ imgSize = Point(0, 0)
 roiSize = Point(0, 0)
 roiGap = Point(0, 0)
 
-cap = cv2.VideoCapture('/home/pi/evc/roadtests/video3_hd_lines.mp4')
+cap = cv2.VideoCapture('../../roadtests/video3_hd_lines.mp4')
 
 while cap.isOpened():
     ret, frame = cap.read()

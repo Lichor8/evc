@@ -1,6 +1,6 @@
 # import the necessary packages
 import math
-# from detection import shapedetector
+from detection import shapedetector
 import cv2
 import imutils
 import numpy as np
@@ -21,7 +21,7 @@ pi_cam_y_angle = 41
 
 # load the image and resize it to a smaller factor so that
 # the shapes can be approximated better
-cap = cv2.VideoCapture('../roadtests/video3short.mp4')
+cap = cv2.VideoCapture('../../roadtests/video3short.mp4')
 
 while cap.isOpened():
     ret, frame = cap.read()
