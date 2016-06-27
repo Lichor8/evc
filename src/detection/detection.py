@@ -8,9 +8,10 @@ import numpy as np
 # from libs import defs
 
 # import computational entities (functions)
+from detection import lanedetection
+from detection import detectshapes
 from detection import gapdetection
 # from detection import lineclustering
-
 
 class Detection:
 
@@ -54,5 +55,9 @@ class Detection:
         receivedpos = [receivedpos_x, receivedpos_y]
 
         self.gappos = gapdetection.gapdetection(img, receivedpos)
+
+        # detection
+        detectshapes.detectshapes()
+        # lanedetection.lanedetection()
 
 
