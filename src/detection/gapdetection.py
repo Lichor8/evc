@@ -1,5 +1,5 @@
 # import OpenCV functions
-import cv2
+# import cv2
 
 # import Numpy functions
 import numpy as np
