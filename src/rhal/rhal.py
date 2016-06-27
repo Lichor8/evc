@@ -9,16 +9,16 @@
 
 # import computational entities (functions)
 from rhal import currentsensor
+from rhal import rpiarduinocom as rpia
+
 
 class Rhal:
-
     # initialize class object for the first time
     def __init__(self):
 
-        # gapdetection (inputs/outputs)
-        self.gappos = []
-
-        # lineclustering (inputs/outputs)
+        # rpi_arduino_com (inputs/outputs)
+        self.rdata = []
+        self.sdata = []
 
     # monitor
     # def monitor(self):
@@ -33,9 +33,14 @@ class Rhal:
         # self.linecl.setsomething(something)
 
     # getters
-    # def getgappos(self):
-        # return self.gappos
+    def get_rdata(self):
+        return self.rdata
 
     # coordinator/composer
     def rhal(self):
-        currentsensor.currentsensor()
+        placeholder = self.rdata
+        # currentsensor.currentsensor()
+
+        # rpi arduino communication
+        # rpia.rpi2arduino(self.sdata)    # setter?
+        # self.rdata = rpia.arduino2rpi()

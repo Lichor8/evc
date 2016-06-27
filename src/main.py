@@ -16,10 +16,10 @@ while io_ok:
     if io_read:
 
         # trigger coordinator/composer of rhal
-        rhal.rhal()
+        # rhal.rhal()
 
         # trigger coordinator/composer of detection
-        # det.detection()
+        det.detection()
         # gappos = det.getgappos()
         # print("correct gapposition",gappos)
 

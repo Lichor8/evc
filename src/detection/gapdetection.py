@@ -63,5 +63,4 @@ def gapdetection(img, gappos):
             if Foundgap == 1:
                 gappos.append([gapposfuckrik_x, gapposfuckrik_y])
 
-
     return gappos
