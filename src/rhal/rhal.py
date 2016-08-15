@@ -8,13 +8,17 @@
 # from libs import defs
 
 # import computational entities (functions)
-from rhal import currentsensor
+# from rhal import currentsensor
 from rhal import rpiarduinocom as rpia
+from rhal import io
 
 
 class Rhal:
     # initialize class object for the first time
     def __init__(self):
+
+        # initialize io
+        self.ser = []
 
         # rpi_arduino_com (inputs/outputs)
         self.rdata = []
@@ -28,6 +32,9 @@ class Rhal:
     # def configurator(self, something):
         # self.linecl.setsomething(something)
 
+    def io(self):
+        self.ser = io.initialize()
+
     # setters
     # def setsomethinglincl(self, something):
         # self.linecl.setsomething(something)
@@ -38,9 +45,8 @@ class Rhal:
 
     # coordinator/composer
     def rhal(self):
-        placeholder = self.rdata
         # currentsensor.currentsensor()
 
         # rpi arduino communication
-        # rpia.rpi2arduino(self.sdata)    # setter?
-        # self.rdata = rpia.arduino2rpi()
+        rpia.rpi2arduino(self.ser, self.sdata)    # setter?
+        self.rdata = rpia.arduino2rpi(self.ser)

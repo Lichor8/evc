@@ -1,10 +1,32 @@
-# first load virtual environment for opencv3
-source ~/.profile
-workon cv
-
 # make main.py executable
-sudo chmod +x main.py 
+sudo chmod +x main.py
+
+# load virtual environment for python3
+source ~/.profile
+workon cv 
+
+# to stop working in cv
+deactivate
+
+# load virtual environment for python3 as root
+sudo su
+source ~/.profile
+workon cv 
 
 # run python script using python or python3
-sudo python main.py
-sudo python3 main.py
+python main.py
+python3 main.py
+
+# run python scripts as root (install python3 virtual environment on root user) (only need to run these commands once)
+sudo su
+echo -e "\n# virtualenv and virtualenvwrapper" >> ~/.profile
+echo "export WORKON_HOME=$HOME/.virtualenvs" >> ~/.profile
+echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.profile
+source ~/.profile
+mkvirtualenv cv -p python3
+
+cd ~/.virtualenvs/cv/lib/python3.5/site-packages/
+ln -s /usr/local/lib/python3.5/site-packages/cv2.so cv2.so
+
+pip3 install numpy
+pip3 install imutils

@@ -11,3 +11,8 @@ def initialize():
     time.sleep(2)  # wait for Arduino
 
     return ser
+
+
+# def ok():
+
+    # return 1
