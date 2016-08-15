@@ -1,3 +1,6 @@
+# clone existing project
+git clone https://github.com/Lichor8/evc github
+
 #create a new branch
 git branch <branch-name>
 
