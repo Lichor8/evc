@@ -1,0 +1,10 @@
+# first load virtual environment for opencv3
+source ~/.profile
+workon cv
+
+# make main.py executable
+sudo chmod +x main.py 
+
+# run python script using python or python3
+sudo python main.py
+sudo python3 main.py

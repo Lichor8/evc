@@ -1,0 +1,23 @@
+# network status
+ifconfig
+
+# ping hostname
+ping rasbperryr
+
+# connect via secure connection as user pi with X forwarding
+ssh pi@172.24.1.1 -X
+
+# screen share rpi
+# on laptop
+vncviewer
+ip: 172.24.1.1:1
+shift+enter
+# on rpi
+vncserver
+vncserver :1
+vncserver -kill :1
+
+# check usb port
+ls /dev/ttyACM*
+ls /dev/ttyA*
+ls /dev/ttyUSB*
