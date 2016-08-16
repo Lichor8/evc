@@ -18,9 +18,14 @@ while io_ok:
 
     if io_read:
 
+        # set data to send to arduino
+        sdata = '0x117|y135|'
+        rhal.setsdata(sdata)
+
         # trigger coordinator/composer of rhal
         rhal.rhal()
-        # rdata = rhal.get_rdata()
+        rdata = rhal.get_rdata()
+        print(rdata)
 
         # trigger coordinator/composer of detection
         # det.detection()
@@ -28,4 +33,4 @@ while io_ok:
         # print("correct gapposition",gappos)
 
         # stop main loop
-        break
+        # break

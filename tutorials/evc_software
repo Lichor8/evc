@@ -1,0 +1,11 @@
+## OpenJDK (java)
+# only Java Runtime Environment
+sudo apt-get install openjdk-8-jre
+# to develop Java programs?
+sudo apt-get install openjdk-8-jdk package
+
+## Pycharm
+# unzip
+tar xfz pycharm-2016.1.2.tar.gz 
+# run 'pycharm.sh' in bin directory
+./pycharm.sh

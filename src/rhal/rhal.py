@@ -36,8 +36,8 @@ class Rhal:
         self.ser = io.initialize()
 
     # setters
-    # def setsomethinglincl(self, something):
-        # self.linecl.setsomething(something)
+    def setsdata(self, sdata):
+        self.sdata = sdata
 
     # getters
     def get_rdata(self):

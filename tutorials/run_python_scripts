@@ -17,6 +17,9 @@ workon cv
 python main.py
 python3 main.py
 
+
+(https://www.digitalocean.com/community/tutorials/common-python-tools-using-virtualenv-installing-with-pip-and-managing-packages)
+(http://docs.python-guide.org/en/latest/dev/virtualenvs/)
 # run python scripts as root (install python3 virtual environment on root user) (only need to run these commands once)
 sudo su
 echo -e "\n# virtualenv and virtualenvwrapper" >> ~/.profile

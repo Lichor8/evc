@@ -26,6 +26,7 @@ void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_deg, float &
     // read serial data from raspberry pi
     //rpiData = Serial.readStringUntil('e');
     rpiData = Serial.readString();
+    Serial.println(rpiData);
               
     mov_type = rpiData[0] - '0';  // convert the character '1'-'9' to decimal 1-9
     int end_index = 0;
@@ -87,3 +88,4 @@ float read_data(int begin_index, String rpiData, int &end_index)
   //Serial.println(data_num);
   return data_num;
 }
+
