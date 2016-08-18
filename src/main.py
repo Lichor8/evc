@@ -19,7 +19,8 @@ while io_ok:
     if io_read:
 
         # set data to send to arduino
-        sdata = '0x117|y135|'
+        sdata = '0x1|y1|'
+        sdata = '0x0|y1|'       # stop arduino
         rhal.setsdata(sdata)
 
         # trigger coordinator/composer of rhal
