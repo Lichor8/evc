@@ -11,8 +11,10 @@
 #define CURRENT_CHARGE 0
 #define CURRENT_LOAD 1
 
+const int timeout = 1000/50;
 const float pi = 3.14159;
 const int ledPin = 13;
+String rpiData; //"0x127|y135|";
 
 // the setup function runs once when you press reset or power the board
 void setup() {
@@ -33,6 +35,7 @@ void setup() {
   pinMode(ledPin, OUTPUT);
   
   Serial.begin(9600);
+  Serial.setTimeout(timeout);
 }
 
 // position control loop (pcontrol_freq)
@@ -41,8 +44,11 @@ void loop()
 // initialize variables
     
   // recieve rpi information
+  int mov_type = -1;
   float x_d = 0.0;
   float y_d = 0.0;
+  float turn_deg = 0;
+  float stop_sec = 0;
   
   //location2angle
   float phi_a = pi/2; // using coordinate frame on the robot (relative) so actual is always pi/2
@@ -80,7 +86,8 @@ void loop()
     const float sensor_freq   = 1000.0;            // sensor sample loop frequency     [1/s]
     const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
     
-    // receive rpi information    
+    // receive rpi information   
+    rpi2arduino(mov_type, x_d, y_d, turn_deg, stop_sec);
     //char inData[20];   // Allocate some space for the string
     //char inChar = -1;  // Where to store the character read
     //byte index  = 0;   // Index into array; where to store the character
@@ -313,4 +320,74 @@ void sleep(float sensor_time, float ts) {
   while (abs(te-ts) < sensor_time) {    
     te = millis();
   } 
+}
+
+void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_deg, float &stop_sec)
+{
+  if(Serial.available()) // Don't read unless
+  {
+    // read serial data from raspberry pi
+    //rpiData = Serial.readStringUntil('e');
+    rpiData = Serial.readString();
+    Serial.println(rpiData);
+              
+    mov_type = rpiData[0] - '0';  // convert the character '1'-'9' to decimal 1-9
+    int end_index = 0;
+    int begin_index = 2;    
+        
+    // if movement type is drive between lines (mov_type = 0) then read x and y position of goal point
+    if(mov_type == 0 && rpiData[1] == 'x')//rpiData[1] == 'x'  //mov_type == 0
+    {
+      x_d = read_data(begin_index, rpiData, end_index);
+      Serial.println(x_d);
+      digitalWrite(13, LOW);
+          
+      if(mov_type == 0 && rpiData[1 + end_index] == 'y')
+      {
+        y_d = read_data(begin_index + end_index, rpiData, end_index);
+        Serial.println(y_d);
+      }
+    }
+    
+    // if movement type is turn (mov_type = 4) then read degrees
+    if(mov_type == 4 && rpiData[1] == 'd')
+    {
+      turn_deg = read_data(begin_index, rpiData, end_index);
+      Serial.println(turn_deg);
+    }
+        
+    // if movement type is stop (mov_type = 5) then read stop time
+    if(mov_type == 5 && rpiData[1] == 't')
+    {
+      stop_sec = read_data(begin_index, rpiData, end_index);
+      Serial.println(stop_sec);
+    }
+  }
+}
+
+
+float read_data(int begin_index, String rpiData, int &end_index)
+{
+  int k = 0;
+  int data[5];
+  float data_num = 0;
+    
+  while(rpiData[begin_index + k] != '|')
+  {
+    data[k] = rpiData[begin_index + k]  - '0';
+    //Serial.println(data[k]);
+    k++;    
+  }
+  end_index = begin_index + k; //3
+  //Serial.println(end_index);
+    
+  int l = 0;
+  while(l < k)
+  {
+    data_num = data_num + data[k-1-l]*pow(10,l);
+    //Serial.println(data_num);
+    l++;
+  }
+  //Serial.println(data_num);
+  return data_num;
 }
