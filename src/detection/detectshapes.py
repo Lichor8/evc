@@ -230,13 +230,13 @@ def detectshapes():
                         disttext = str(round(distance, 3))+"m"
                         cv2.putText(image, disttext, (cX, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
-                    if shape == "uturn":
+
 
 
         cv2.imshow("Red", red)
         cv2.imshow("Blue", blue)
         cv2.imshow("Yellow", yellow)
-        cv2.imshow("Blue gray", bluegray)
+
         cv2.imshow("Treshold", thresh)
         cv2.imshow("Video", image)
 

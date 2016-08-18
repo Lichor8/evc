@@ -18,3 +18,11 @@ git checkout master
 
 #to show a list of all available local branches
 git branch
+
+#merge branches (topic to master)
+git checkout master
+git merge topic
+git pull
+(fix conflicts)
+git commit
+git push

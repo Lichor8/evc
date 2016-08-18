@@ -19,16 +19,16 @@ while io_ok:
     if io_read:
 
         # set data to send to arduino
-        # sdata = '0x117|y135|'
-        # rhal.setsdata(sdata)
+        sdata = '0x117|y135|'
+        rhal.setsdata(sdata)
 
         # trigger coordinator/composer of rhal
-        # rhal.rhal()
-        # rdata = rhal.get_rdata()
-        # print(rdata)
+        rhal.rhal()
+        rdata = rhal.get_rdata()
+        print(rdata)
 
         # trigger coordinator/composer of detection
-        det.detection()
+        # det.detection()
         # gappos = det.getgappos()
         # print("correct gapposition",gappos)
 
