@@ -19,7 +19,8 @@ class Detection:
     def __init__(self):
         self.status = 1
         self.line = 0
-
+        # from lanedetection
+        self.target = []
         # gapdetection (inputs/outputs)
         self.gappos = []
 
@@ -41,23 +42,26 @@ class Detection:
     def getgappos(self):
         return self.gappos
 
+    def gettarget(self):
+        return self.target
+
     # coordinator/composer
     def detection(self):
         # self.linecl.lineclustering()
         # self.line = self.linecl.getline()
 
         # get camera images
-        img = cv2.imread('../roadtests/cornerrightinsane.jpg')
 
         # run computational entities and retrieve outputs
-        receivedpos_x = [1200, 600, 200, 100]
-        receivedpos_y = [230, 230, 100, 80]
-        receivedpos = [receivedpos_x, receivedpos_y]
+        # receivedpos_x = [1200, 600, 200, 100]
+        # receivedpos_y = [230, 230, 100, 80]
+        # receivedpos = [receivedpos_x, receivedpos_y]
 
-        self.gappos = gapdetection.gapdetection(img, receivedpos)
+        # self.gappos = gapdetection.gapdetection(img, receivedpos)
 
         # detection
-        detectshapes.detectshapes()
-        # lanedetection.lanedetection()
+        # detectshapes.detectshapes()
+        lanedetection.lanedetection()
+        self.target = lanedetection.gettarget()
 
-
+        print(self.target)

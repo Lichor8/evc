@@ -38,6 +38,14 @@ def intersection(L1, L2):
     else:
         return False
 
+debug = False
+
+dvlength = 150
+go_to = [0, dvlength]    # initial if no lines detected
+
+def gettarget():
+    print(go_to)
+    return go_to
 
 def lanedetection():
     # create instance of namedtuples and initialize
@@ -80,7 +88,8 @@ def lanedetection():
 
         avghough = dst.copy()
 
-        cv2.imshow('Birds view', dst)
+        if debug:
+            cv2.imshow('Birds view', dst)
 
         imgBlurred = cv2.GaussianBlur(dst, (5, 5), 0)
         gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
@@ -90,8 +99,9 @@ def lanedetection():
 
         imgCanny = cv2.Canny(tresholded, 150, 250, apertureSize=3)
 
-        cv2.imshow('Tresholded', tresholded)
-        cv2.imshow('Canny', imgCanny)
+        if debug:
+            cv2.imshow('Tresholded', tresholded)
+            cv2.imshow('Canny', imgCanny)
 
         imgShape = imgCanny.shape
         imgSize.x = imgShape[1]  # save the size of the image in pixels
@@ -105,7 +115,8 @@ def lanedetection():
         imgRoi = np.zeros((imgSize.y, imgSize.x), np.uint8)  # create new binary black image
         imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi  # add roi to black image
 
-        cv2.imshow('Canny ROI', imgRoi)
+        if debug:
+            cv2.imshow('Canny ROI', imgRoi)
 
         # set heuristic parameters for the (probabilistic) houghlines function
         rho = 1     # accuracy [pixel]
@@ -147,7 +158,9 @@ def lanedetection():
                     if anglepos + 2 <= len(thhist):
                         thhist[anglepos + 1] = 0
                     # print(angle)
-                    if not 0.733-0.1 < angle < 0.733+0.1 and not 2.356-0.1 < angle < 2.356+0.1 and not np.pi*0.45 < angle < np.pi*0.55:
+                    # Filter out lines of the perspective transformation
+                    if not 0.733-0.1 < angle < 0.733+0.1 and not 2.356-0.1 < angle < 2.356+0.1:
+                        # and not np.pi*0.45 < angle < np.pi*0.55
                         histangles.append(angle)  # Append theta value of the peak to angle
 
             all_angles = [[] for _ in range(len(histangles))]  # Make an array with n arrays, for all found angles from hist
@@ -164,7 +177,8 @@ def lanedetection():
                     y1 = int(y0 + 1000 * a)
                     x2 = int(x0 - 1000 * (-b))
                     y2 = int(y0 - 1000 * a)
-                    cv2.line(dst, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                    if debug:
+                        cv2.line(dst, (x1, y1), (x2, y2), (0, 0, 255), 2)
                     # Compare theta with the histogram angle, if within certain interval, store in all_angles
                     for i in range(0, len(histangles)):
                         if histangles[i] - tres < theta < histangles[i] + tres:
@@ -233,11 +247,12 @@ def lanedetection():
             y1 = int(y0 + 2000 * (a))
             x2 = int(x0 - 2000 * (-b))
             y2 = int(y0 - 2000 * (a))
-            x3 = int(imgSize.x / 2)
-            y3 = imgSize.y
-            x4 = int(x3 + 2 * math.tan(theta))
-            y4 = imgSize.y - 20 - int(1000 / math.tan(theta))
-            cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
+            # x3 = int(imgSize.x / 2)
+            # y3 = imgSize.y
+            # x4 = int(x3 + 2 * math.tan(theta))
+            # y4 = imgSize.y - 20 - int(1000 / math.tan(theta))
+            if debug:
+                cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
             # cv2.line(avghough, (x3, y3), (x4, y4), (255, 0, 0), 2)
 
         L1 = line([int(0.3*W), H-2], [int(0.7*W), H-2])
@@ -259,29 +274,31 @@ def lanedetection():
             R = intersection(L1, L2)
             if R and theta < 0.5*np.pi:
                 if R[0] <= 0.5*W:
-                    cv2.circle(avghough, (int(R[0]), int(R[1])), 1, (255, 0, 0), 8)
-                    inter_left.append([0.5*W-R[0], R[1], theta])
+                    inter_left.append([0.5 * W - R[0], R[1], theta])
+                    if debug:
+                        cv2.circle(avghough, (int(R[0]), int(R[1])), 1, (255, 0, 0), 8)
             elif R and theta > 0.5*np.pi:
                 if R[0] >= 0.5*W:
-                    cv2.circle(avghough, (int(R[0]), int(R[1])), 1, (0, 255, 0), 8)
-                    inter_right.append([R[0]-0.5*W, R[1], theta])
+                    inter_right.append([R[0] - 0.5 * W, R[1], theta])
+                    if debug:
+                        cv2.circle(avghough, (int(R[0]), int(R[1])), 1, (0, 255, 0), 8)
 
-        dvlength = 150     # direction vector length
-        min_wall_dist = 80     # minimum distance to wall 100px
-
-        go_to = [0, dvlength]    # initial if no lines detected
+        # dvlength = 150          # direction vector length
+        min_wall_dist = 80      # minimum distance to wall in pixels
+        # go_to = [0, dvlength]  # initial if no lines detected
 
         if inter_left and inter_right:
             i = np.argmin([item[0] for item in inter_left])
             j = np.argmin([item[0] for item in inter_right])
 
             drive_angle_l = inter_left[i][2]
-            drive_angle_r = inter_right[i][2]
+            drive_angle_r = inter_right[j][2]
 
             if -np.pi*0.1 < drive_angle_l-drive_angle_r < np.pi*0.1:    # angles similar, both lines same road
                 drive_angle = (drive_angle_r + drive_angle_l)/2
                 x2 = int(0.5 * W + dvlength * math.sin(drive_angle))
                 y2 = int(H - dvlength * math.cos(drive_angle))
+                go_to = [x2 - 0.5 * W, H - y2]
             else:       # probably in shitty situation, turn left fast
                 go_to = [-100, 10]
 
@@ -295,7 +312,8 @@ def lanedetection():
             y1 = H
             x2 = int(0.5 * W + offset + dvlength * math.sin(drive_angle))
             y2 = int(H - dvlength * math.cos(drive_angle))
-            # cv2.line(avghough, (x1, y1), (x2, y2), (255, 0, 255), 2)
+            if debug:
+                cv2.line(avghough, (x1, y1), (x2, y2), (255, 0, 255), 2)
             go_to = [x2 - 0.5 * W, H - y2]
 
         elif inter_right:
@@ -308,18 +326,19 @@ def lanedetection():
             y1 = H
             x2 = int(0.5 * W - offset - dvlength * math.sin(drive_angle))
             y2 = int(H + dvlength * math.cos(drive_angle))
-            # cv2.line(avghough, (x1, y1), (x2, y2), (0, 255, 255), 2)
+            if debug:
+                cv2.line(avghough, (x1, y1), (x2, y2), (0, 255, 255), 2)
             go_to = [x2 - 0.5 * W, H - y2]
 
         x1 = int(0.5 * W)
         y1 = H
         x2 = int(go_to[0] + 0.5*W)
         y2 = int(H - go_to[1])
-        cv2.line(avghough, (x1, y1), (x2, y2), (255, 0, 255), 2)
 
-        cv2.imshow('DST', dst)
-        cv2.imshow('avghough', avghough)
-        cv2.waitKey(0)
+        if debug:
+            cv2.line(avghough, (x1, y1), (x2, y2), (255, 0, 255), 2)
+            cv2.imshow('DST', dst)
+            cv2.imshow('avghough', avghough)
 
         # print(all_angles)
         # print(avg_line_values)

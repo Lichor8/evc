@@ -13,6 +13,7 @@ class Point:
         self.y = y
 # Point = namedtuple('Point', 'y, x')   # point in cartesian coordinates
 
+debug = False
 
 def detectshapes():
     # create instance of namedtuples and initialize
@@ -85,7 +86,7 @@ def detectshapes():
             # Combine the two images to get the foreground.
             masks[i] = masks[i] | im_floodfill_inv
 
-        blue_forcircles = cv2.bitwise_and(resized, resized, mask=masks[0])
+        # blue_forcircles = cv2.bitwise_and(resized, resized, mask=masks[0])
 
         masks[0] = cv2.erode(masks[0], kernel, iterations=1)
         masks[1] = cv2.erode(masks[1], kernel, iterations=1)
@@ -116,12 +117,12 @@ def detectshapes():
             for (x, y, r) in circles:
                 # draw the circle in the output image, then draw a rectangle
                 # corresponding to the center of the circle
-                cv2.circle(output, (x, y), r, (0, 255, 0), 2)
-                cv2.rectangle(output, (x - 2, y - 2), (x + 2, y + 2), (0, 128, 255), -1)
+                if debug:
+                    cv2.circle(output, (x, y), r, (0, 255, 0), 2)
+                    cv2.rectangle(output, (x - 2, y - 2), (x + 2, y + 2), (0, 128, 255), -1)
+                    # show the output image
+                    cv2.imshow("Houghcircles", output)
                 circlecenters.append([x * ratio, y * ratio, r*ratio])
-                # show the output image
-                # cv2.imshow("canny", bluecanny)
-                cv2.imshow("Houghcircles", output)
         else:
             circles = []
 
@@ -130,8 +131,9 @@ def detectshapes():
         roi_dir = []
         # convert the resized image to grayscale, blur it slightly, and threshold it
 
-        detected_signs = np.roll(detected_signs, 1, axis=0)
-        detected_signs[1,:]
+        # Matrix to store which signs have been detected in the last n frames
+        detected_signs = np.roll(detected_signs, 1, axis=0)     # Shift matrix 1 row down
+        detected_signs[0, :] = np.zeros(shape=(1, 5))             # Reset first row
 
         for i in range(0, len(channels)):
             # gray = cv2.cvtColor(channels[i], cv2.COLOR_BGR2GRAY)
@@ -195,7 +197,8 @@ def detectshapes():
                                     shape = "dir straight"
 
                                 roi_dir.append([xlow, xhigh, ylow, yhigh])
-                                cv2.imshow("ROI", roi)
+                                if debug:
+                                    cv2.imshow("ROI", roi)
 
                             else:
                                 shape = "none"
@@ -207,8 +210,9 @@ def detectshapes():
                         y = int(y * ratio)
                         w = int(w * ratio)
                         h = int(h * ratio)
-                        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
                         signratio = size_sign / h
+                        if debug:
+                            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
                         if y < 0.5 * imgSize.y:
                             gamma = np.pi / 180 * abs(0.5 * imgSize.y - y) / imgSize.y * pi_cam_y_angle
                             distance = signratio * abs(0.5 * imgSize.y - y) / math.tan(gamma)
@@ -225,25 +229,39 @@ def detectshapes():
                         c = c.astype("float")
                         c *= ratio
                         c = c.astype("int")
-                        cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
-                        cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
-                        disttext = str(round(distance, 3))+"m"
-                        cv2.putText(image, disttext, (cX, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                        if debug:
+                            cv2.drawContours(image, [c], -1, (0, 255, 0), 2)
+                            cv2.putText(image, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                            disttext = str(round(distance, 3))+"m"
+                            cv2.putText(image, disttext, (cX, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
                     if shape == "uturn":
+                        detected_signs[0, 0] = distance
 
+                    if shape == "stop":
+                        detected_signs[0, 1] = distance
 
-        cv2.imshow("Red", red)
-        cv2.imshow("Blue", blue)
-        cv2.imshow("Yellow", yellow)
-        cv2.imshow("Blue gray", bluegray)
-        cv2.imshow("Treshold", thresh)
-        cv2.imshow("Video", image)
+                    if shape == "dir left":
+                        detected_signs[0, 2] = distance
+
+                    if shape == "dir right":
+                        detected_signs[0, 3] = distance
+
+                    if shape == "dir straight":
+                        detected_signs[0, 4] = distance
+
+        if debug:
+            cv2.imshow("Red", red)
+            cv2.imshow("Blue", blue)
+            cv2.imshow("Yellow", yellow)
+            cv2.imshow("Treshold", thresh)
+            cv2.imshow("Video", image)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
 
-        cv2.waitKey(0)
+        # cv2.waitKey(0)
+        print(detected_signs)
 
     cap.release()
     cv2.destroyAllWindows()

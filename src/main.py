@@ -29,6 +29,7 @@ while io_ok:
 
         # trigger coordinator/composer of detection
         det.detection()
+        # print(det.gettarget())
         # gappos = det.getgappos()
         # print("correct gapposition",gappos)
 
