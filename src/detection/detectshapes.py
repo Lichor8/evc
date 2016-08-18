@@ -18,8 +18,10 @@ def detectshapes():
     # create instance of namedtuples and initialize
     imgSize = Point(0, 0)
 
-    pi_cam_x_angle = 54
+    # pi_cam_x_angle = 54
     pi_cam_y_angle = 41
+
+    detected_signs = np.zeros(shape=(3, 5))
 
     # load the image and resize it to a smaller factor so that
     # the shapes can be approximated better
@@ -36,7 +38,7 @@ def detectshapes():
 
         # resized = cv2.GaussianBlur(resized, (5, 5), 0)
 
-        size_sign = 0.15     # absolute size of a traffic sign in m
+        size_sign = 0.15     # absolute size of a traffic sign in meters
 
         ratio = image.shape[0] / float(resized.shape[0])
         th = 100/ratio  # treshold for center of direction sign
@@ -44,11 +46,11 @@ def detectshapes():
         hsv = cv2.cvtColor(resized, cv2.COLOR_BGR2HSV)
 
         # define range of colors in HSV
-        lower_blue = np.array([100, 100, 100])
-        upper_blue = np.array([140, 255, 255])
+        lower_blue = np.array([100, 60, 60])
+        upper_blue = np.array([120, 255, 255])
 
-        lower_yellow = np.array([10, 130, 130])
-        upper_yellow = np.array([22, 180, 180])
+        lower_yellow = np.array([15, 125, 125])
+        upper_yellow = np.array([21, 255, 255])
 
         lower_red = np.array([0, 120, 120])
         upper_red = np.array([5, 255, 255])
@@ -62,10 +64,10 @@ def detectshapes():
         maskred2 = cv2.inRange(hsv, lower_red2, upper_red2)
         maskred = maskred1 + maskred2
 
-        kernel = np.ones((7, 7), np.uint8)
-        maskbluedil = cv2.dilate(maskblue, kernel, iterations=3)
-        maskreddil = cv2.dilate(maskred, kernel, iterations=3)
-        maskyellowdil = cv2.dilate(maskyellow, kernel, iterations=3)
+        kernel = np.ones((3, 3), np.uint8)
+        maskbluedil = cv2.dilate(maskblue, kernel, iterations=2)
+        maskreddil = cv2.dilate(maskred, kernel, iterations=2)
+        maskyellowdil = cv2.dilate(maskyellow, kernel, iterations=2)
 
         masks = [maskbluedil, maskreddil, maskyellowdil]
 
@@ -85,19 +87,22 @@ def detectshapes():
 
         blue_forcircles = cv2.bitwise_and(resized, resized, mask=masks[0])
 
-        masks[0] = cv2.erode(masks[0], kernel, iterations=2)
-        masks[1] = cv2.erode(masks[1], kernel, iterations=2)
-        masks[2] = cv2.erode(masks[2], kernel, iterations=2)
+        masks[0] = cv2.erode(masks[0], kernel, iterations=1)
+        masks[1] = cv2.erode(masks[1], kernel, iterations=1)
+        masks[2] = cv2.erode(masks[2], kernel, iterations=1)
 
         # Bitwise-AND mask and original image
         blue = cv2.bitwise_and(resized, resized, mask=masks[0])
+        blue = cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
         red = cv2.bitwise_and(resized, resized, mask=masks[1])
+        red = cv2.cvtColor(red, cv2.COLOR_BGR2GRAY)
         yellow = cv2.bitwise_and(resized, resized, mask=masks[2])
+        yellow = cv2.cvtColor(yellow, cv2.COLOR_BGR2GRAY)
 
-        bluegray = cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
+        # bluegray = cv2.cvtColor(blue, cv2.COLOR_BGR2GRAY)
 
         # detect circles in the image
-        circles = cv2.HoughCircles(bluegray, cv2.HOUGH_GRADIENT, 1, 200, param1=50, param2=30,
+        circles = cv2.HoughCircles(blue, cv2.HOUGH_GRADIENT, 1, 200, param1=50, param2=30,
                                    minRadius=int(15 / ratio), maxRadius=int(1500 / ratio))
         output = resized.copy()
         circlecenters = []
@@ -125,9 +130,12 @@ def detectshapes():
         roi_dir = []
         # convert the resized image to grayscale, blur it slightly, and threshold it
 
+        detected_signs = np.roll(detected_signs, 1, axis=0)
+        detected_signs[1,:]
+
         for i in range(0, len(channels)):
-            gray = cv2.cvtColor(channels[i], cv2.COLOR_BGR2GRAY)
-            blurred = cv2.GaussianBlur(gray, (1, 1), 0)
+            # gray = cv2.cvtColor(channels[i], cv2.COLOR_BGR2GRAY)
+            blurred = cv2.GaussianBlur(channels[i], (1, 1), 0)
             thresh = cv2.threshold(blurred, 50, 255, cv2.THRESH_BINARY)[1]
 
             # cv2.imshow("Tresh", thresh)
@@ -172,7 +180,7 @@ def detectshapes():
                                 roi_bl = maskblue[yhalf:yhigh, xlow:xhalf]
                                 roi_br = maskblue[yhalf:yhigh, xhalf:xhigh]
 
-                                pxtres = int((cv2.countNonZero(roi) * 0.03))  # 3% is minimum difference between quarters
+                                pxtres = int((cv2.countNonZero(roi) * 0.04))  # 4% is minimum difference between quarters
 
                                 pxtl = cv2.countNonZero(roi_tl)
                                 pxtr = cv2.countNonZero(roi_tr)
@@ -222,15 +230,20 @@ def detectshapes():
                         disttext = str(round(distance, 3))+"m"
                         cv2.putText(image, disttext, (cX, cY+15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
-        # cv2.imshow("Red", red)
-        # cv2.imshow("Blue", blue)
-        # cv2.imshow("Yellow", yellow)
-        # cv2.imshow("Blue gray", bluegray)
+                    if shape == "uturn":
+
+
+        cv2.imshow("Red", red)
+        cv2.imshow("Blue", blue)
+        cv2.imshow("Yellow", yellow)
+        cv2.imshow("Blue gray", bluegray)
         cv2.imshow("Treshold", thresh)
         cv2.imshow("Video", image)
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
+
+        cv2.waitKey(0)
 
     cap.release()
     cv2.destroyAllWindows()

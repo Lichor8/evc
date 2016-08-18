@@ -80,6 +80,8 @@ def lanedetection():
 
         avghough = dst.copy()
 
+        cv2.imshow('Birds view', dst)
+
         imgBlurred = cv2.GaussianBlur(dst, (5, 5), 0)
         gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
 
@@ -88,8 +90,8 @@ def lanedetection():
 
         imgCanny = cv2.Canny(tresholded, 150, 250, apertureSize=3)
 
-        # cv2.imshow('Tresholded', tresholded)
-        # cv2.imshow('Canny', imgCanny)
+        cv2.imshow('Tresholded', tresholded)
+        cv2.imshow('Canny', imgCanny)
 
         imgShape = imgCanny.shape
         imgSize.x = imgShape[1]  # save the size of the image in pixels
@@ -103,7 +105,7 @@ def lanedetection():
         imgRoi = np.zeros((imgSize.y, imgSize.x), np.uint8)  # create new binary black image
         imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi  # add roi to black image
 
-        # cv2.imshow('Canny ROI', imgRoi)
+        cv2.imshow('Canny ROI', imgRoi)
 
         # set heuristic parameters for the (probabilistic) houghlines function
         rho = 1     # accuracy [pixel]
@@ -231,10 +233,10 @@ def lanedetection():
             y1 = int(y0 + 2000 * (a))
             x2 = int(x0 - 2000 * (-b))
             y2 = int(y0 - 2000 * (a))
-            # x3 = int(imgSize.x / 2)
-            # y3 = imgSize.y
-            # x4 = int(x3 + 2 * math.tan(theta))
-            # y4 = imgSize.y - 20 - int(1000 / math.tan(theta))
+            x3 = int(imgSize.x / 2)
+            y3 = imgSize.y
+            x4 = int(x3 + 2 * math.tan(theta))
+            y4 = imgSize.y - 20 - int(1000 / math.tan(theta))
             cv2.line(avghough, (x1, y1), (x2, y2), (0, 0, 255), 2)
             # cv2.line(avghough, (x3, y3), (x4, y4), (255, 0, 0), 2)
 
@@ -315,9 +317,9 @@ def lanedetection():
         y2 = int(H - go_to[1])
         cv2.line(avghough, (x1, y1), (x2, y2), (255, 0, 255), 2)
 
-        # cv2.imshow('DST', dst)
-        # cv2.imshow('avghough', avghough)
-        # cv2.waitKey(0)
+        cv2.imshow('DST', dst)
+        cv2.imshow('avghough', avghough)
+        cv2.waitKey(0)
 
         # print(all_angles)
         # print(avg_line_values)
