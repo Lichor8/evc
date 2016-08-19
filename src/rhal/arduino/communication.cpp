@@ -34,6 +34,13 @@ void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_deg, float &
       }
     }
     
+    // if movement type is turn left (mov_type = 1) then read omega
+//    if(mov_type == 1 && rpiData[1] == 'w')
+//    {
+//      turn_deg = read_data(begin_index, rpiData, end_index);
+//      //Serial.println(turn_deg);
+//    }
+    
     // if movement type is turn (mov_type = 4) then read degrees
     if(mov_type == 4 && rpiData[1] == 'd')
     {

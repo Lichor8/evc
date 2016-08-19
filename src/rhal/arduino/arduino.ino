@@ -60,8 +60,11 @@ void loop()
 
     // act according to selected movement type
     // if movement type is drive between lines (mov_type = 0) 
+    // if movement type is turn left (mov_type = 1)
+    // if movement type is straight (mov_type = 2)
+    // if movement type is turn right (mov_type = 3)
     // if movement type is turn (mov_type = 4)
-    // if movement type is stop (mov_type = 5) 
+    // if movement type is stop (mov_type = 5)
     movement(mov_type, x_d, y_d, turn_deg, stop_sec);    
   } 
 }

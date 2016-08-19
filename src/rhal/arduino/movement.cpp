@@ -1,3 +1,11 @@
+// act according to selected movement type
+// if movement type is drive between lines (mov_type = 0) 
+// if movement type is turn left (mov_type = 1)
+// if movement type is straight (mov_type = 2)
+// if movement type is turn right (mov_type = 3)
+// if movement type is turn (mov_type = 4)
+// if movement type is stop (mov_type = 5)
+
 // import libraries
 #include <Arduino.h>
 #include "movement.h"
@@ -62,12 +70,7 @@ const float pi = 3.14159;
   
 // functions
 void movement(int mov_type, float x_d, float y_d, float turn_deg, float stop_sec)
-{
-// act according to selected movement type
-    // if movement type is drive between lines (mov_type = 0) 
-    // if movement type is turn (mov_type = 4)
-    // if movement type is stop (mov_type = 5)
-    
+{    
     // location2angle (use when actual location is available)
     //phi_a = pi;   
     //x_a   = 0.0;    
@@ -84,8 +87,41 @@ void movement(int mov_type, float x_d, float y_d, float turn_deg, float stop_sec
     float theta_dot_d_l = 0.0;  
     float theta_dot_d_r = 0.0;    
     
-    theta_dot_d_r = (2*v + omega*L)/(2*R);  // [rad/s]
-    theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
+    if (mov_type == 0)
+    {
+      theta_dot_d_r = (2*v + omega*L)/(2*R);  // [rad/s]
+      theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
+    }    
+    if (mov_type == 1)
+    {
+      omega = pi;
+      float r1 = 0.2;             // inner turn radius [m]
+      float r2 = r1 + L;          // outer turn radius [m]
+      theta_dot_d_r = omega/r2;  // [rad/s]
+      theta_dot_d_l = omega/r1;  // [rad/s]
+    }
+    if (mov_type == 2)
+    {
+      theta_dot_d_r = -omega;  // [rad/s]
+      theta_dot_d_l = -omega;  // [rad/s]
+    }
+    if (mov_type == 3)
+    {
+      float r1 = 0.2;             // inner turn radius [m]
+      float r2 = r1 + L;          // outer turn radius [m]
+      theta_dot_d_r = -omega/r1;  // [rad/s]
+      theta_dot_d_l = -omega/r2;  // [rad/s]
+    }    
+    if (mov_type == 4)
+    {
+      theta_dot_d_r = pi/2;              // [rad/s]
+      theta_dot_d_l = -theta_dot_d_r;    // [rad/s]
+    }    
+    if (mov_type == 5)
+    {
+      theta_dot_d_r = 0;    // [rad/s]
+      theta_dot_d_l = 0;    // [rad/s]
+    }
     
     // variables for sensor sample loop (sensor_freq)
     int MotorL = 0;
@@ -194,19 +230,39 @@ void movement(int mov_type, float x_d, float y_d, float turn_deg, float stop_sec
           //  Serial.println(theta_dot_a_r);
           //}
           
-          float r_l = theta_dot_d_l;
-          float x1_l = theta_dot_a_l;
-          float x2_l = dc_current_a_l;
-          //float c_l = K[0]*x1_l + K[1]*x2_l + F*r_l;
-          float c_l = (theta_dot_d_l - theta_dot_a_l)*1;
-          MotorL = 255*c_l;
+          // act according to selected movement type
+          // drive between lines (mov_type = 0)
+          if (mov_type == 0)
+          {
+            // PID controller
+            float r_l = theta_dot_d_l;
+            float x1_l = theta_dot_a_l;  
+            float x2_l = dc_current_a_l;
+            //float c_l = K[0]*x1_l + K[1]*x2_l + F*r_l;
+            float c_l = (theta_dot_d_l - theta_dot_a_l)*1;
+            MotorL = 255*c_l;
+            
+            float r_r = theta_dot_d_r;
+            float x1_r = theta_dot_a_r;
+            float x2_r = dc_current_a_r;
+            //float c_r = K[0]*x1_r + K[1]*x2_r + F*r_r;
+            float c_r = (theta_dot_d_r - theta_dot_a_r)*1;
+            MotorR = 255*c_r;
+          }
+          // turn left (mov_type = 1)
+          if (1)
+          {
+            float c_l = (theta_dot_d_l - theta_dot_a_l)*1;
+            MotorL = 255*c_l;
+            
+            float c_r = (theta_dot_d_r - theta_dot_a_r)*1;
+            MotorR = 255*c_r;
+          }
           
-          float r_r = theta_dot_d_r;
-          float x1_r = theta_dot_a_r;
-          float x2_r = dc_current_a_r;
-          //float c_r = K[0]*x1_r + K[1]*x2_r + F*r_r;
-          float c_r = (theta_dot_d_r - theta_dot_a_r)*1;
-          MotorR = 255*c_r;
+          // if movement type is straight (mov_type = 2)
+          // if movement type is turn right (mov_type = 3)
+          // if movement type is turn (mov_type = 4)
+          // if movement type is stop (mov_type = 5)
           
           //Serial.println(c_l);
           
