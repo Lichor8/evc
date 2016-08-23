@@ -46,7 +46,7 @@ class Detection:
         return self.target
 
     # coordinator/composer
-    def detection(self):
+    # def detection(self):
         # self.linecl.lineclustering()
         # self.line = self.linecl.getline()
 
@@ -61,7 +61,13 @@ class Detection:
 
         # detection
         # detectshapes.detectshapes()
-        lanedetection.lanedetection()
-        self.target = lanedetection.gettarget()
-
-        print(self.target)
+        # cap = cv2.VideoCapture('../roadtests/video3_hd_lines.mp4')
+        # while cap.isOpened():
+        #     ret, frame = cap.read()
+        #     target = lanedetection.lanedetection(frame)
+        #     print(target)
+        #     if cv2.waitKey(1) & 0xFF == ord('q'):
+        #         break
+        # cap.release()
+        # cv2.destroyAllWindows()
+        # print(self.target)

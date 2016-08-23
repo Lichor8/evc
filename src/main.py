@@ -1,10 +1,12 @@
 # import robot subsystems
 import rhal.rhal
 import detection.detection
+import strategy.strategy
 
 # create robot objects from classes
 rhal = rhal.rhal.Rhal()
 det = detection.detection.Detection()
+strat = strategy.strategy.Strategy()
 
 # initialize io
 # rhal.io()
@@ -28,7 +30,8 @@ while io_ok:
         # print(rdata)
 
         # trigger coordinator/composer of detection
-        det.detection()
+        # det.detection()
+        strat.strategy()
         # print(det.gettarget())
         # gappos = det.getgappos()
         # print("correct gapposition",gappos)

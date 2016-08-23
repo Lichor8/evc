@@ -15,17 +15,21 @@ import math
 # from collections import namedtuple
 
 # define classes
+
+
 class Point:
     def __init__(self, x, y):
         self.x = x
         self.y = y
 # Point = namedtuple('Point', 'y, x')   # point in cartesian coordinates
 
+
 def line(p1, p2):
     A = (p1[1] - p2[1])
     B = (p2[0] - p1[0])
     C = (p1[0]*p2[1] - p2[0]*p1[1])
     return A, B, -C
+
 
 def intersection(L1, L2):
     D  = L1[0] * L2[1] - L1[1] * L2[0]
@@ -38,153 +42,149 @@ def intersection(L1, L2):
     else:
         return False
 
-debug = False
+debug = True
 
-dvlength = 150
-go_to = [0, dvlength]    # initial if no lines detected
+# def gettarget():
+#     print(go_to)
+#     return go_to
 
-def gettarget():
-    print(go_to)
-    return go_to
 
-def lanedetection():
-    # create instance of namedtuples and initialize
+def lanedetection(frame):
+    # create instance of named tuples and initialize
     imgSize = Point(0, 0)
     roiSize = Point(0, 0)
     roiGap = Point(0, 0)
 
-    cap = cv2.VideoCapture('../roadtests/video3_hd_lines.mp4')
+    dvlength = 150
+    go_to = [0, dvlength]  # initial if no lines detected
 
-    while cap.isOpened():
-        ret, frame = cap.read()
+    imgShape = frame.shape
+    imgSize.x = imgShape[1]  # save the size of the image in pixels
+    imgSize.y = imgShape[0]
 
-        imgShape = frame.shape
-        imgSize.x = imgShape[1]  # save the size of the image in pixels
-        imgSize.y = imgShape[0]
+    x_off = 0.36*imgSize.x
+    x1 = x_off
+    y1 = 0.75*imgSize.y
+    x2 = imgSize.x - x_off
+    y2 = y1
+    x3 = 0
+    y3 = imgSize.y
+    x4 = imgSize.x
+    y4 = imgSize.y
 
-        x_off = 0.36*imgSize.x
-        x1 = x_off
-        y1 = 0.75*imgSize.y
-        x2 = imgSize.x - x_off
-        y2 = y1
-        x3 = 0
-        y3 = imgSize.y
-        x4 = imgSize.x
-        y4 = imgSize.y
+    # rows, cols, ch = img.shape
+    resizeratio = 1
+    W = int(imgSize.x/resizeratio)
+    H = int(imgSize.y/resizeratio)
 
-        # rows, cols, ch = img.shape
-        resizeratio = 3
-        W = int(imgSize.x/resizeratio)
-        H = int(imgSize.y/resizeratio)
+    ratio = imgSize.x/W
 
-        ratio = imgSize.x/W
+    pts1 = np.float32([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])  # TL, TR, BL, BR
+    pts2 = np.float32(
+        [[int(0.4 * W), int(0.5 * H)], [int(0.6 * W), int(0.5 * H)], [int(0.4 * W), H], [int(0.6 * W), H]])
 
-        pts1 = np.float32([[x1, y1], [x2, y2], [x3, y3], [x4, y4]])  # TL, TR, BL, BR
-        pts2 = np.float32(
-            [[int(0.4 * W), int(0.5 * H)], [int(0.6 * W), int(0.5 * H)], [int(0.4 * W), H], [int(0.6 * W), H]])
+    M = cv2.getPerspectiveTransform(pts1, pts2)
+    dst = cv2.warpPerspective(frame, M, (W, H))
 
-        M = cv2.getPerspectiveTransform(pts1, pts2)
-        dst = cv2.warpPerspective(frame, M, (W, H))
+    avghough = dst.copy()
 
-        avghough = dst.copy()
+    if debug:
+        cv2.imshow('Birds view', dst)
 
-        if debug:
-            cv2.imshow('Birds view', dst)
+    imgBlurred = cv2.GaussianBlur(dst, (5, 5), 0)
+    gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
 
-        imgBlurred = cv2.GaussianBlur(dst, (5, 5), 0)
-        gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
+    thresh = 120
+    th, tresholded = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
 
-        thresh = 120
-        th, tresholded = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
+    imgCanny = cv2.Canny(tresholded, 150, 250, apertureSize=3)
 
-        imgCanny = cv2.Canny(tresholded, 150, 250, apertureSize=3)
+    if debug:
+        cv2.imshow('Tresholded', tresholded)
+        cv2.imshow('Canny', imgCanny)
 
-        if debug:
-            cv2.imshow('Tresholded', tresholded)
-            cv2.imshow('Canny', imgCanny)
+    imgShape = imgCanny.shape
+    imgSize.x = imgShape[1]  # save the size of the image in pixels
+    imgSize.y = imgShape[0]
+    roiSize.x = 100  # define size of roi window in percentage of total image size
+    roiSize.y = 60
+    roiGap.x = int(0.5 * (imgSize.x - roiSize.x * imgSize.x / 100))  # gap calculated as even spaces from image borders
+    roiGap.y = int(imgSize.y - roiSize.y * imgSize.y / 100)  # gap calculated as from the top of the image
 
-        imgShape = imgCanny.shape
-        imgSize.x = imgShape[1]  # save the size of the image in pixels
-        imgSize.y = imgShape[0]
-        roiSize.x = 100  # define size of roi window in percentage of total image size
-        roiSize.y = 30
-        roiGap.x = int(0.5 * (imgSize.x - roiSize.x * imgSize.x / 100))  # gap calculated as even spaces from image borders
-        roiGap.y = int(imgSize.y - roiSize.y * imgSize.y / 100)  # gap calculated as from the top of the image
+    roi = imgCanny[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x]  # get roi from image
+    imgRoi = np.zeros((imgSize.y, imgSize.x), np.uint8)  # create new binary black image
+    imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi  # add roi to black image
 
-        roi = imgCanny[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x]  # get roi from image
-        imgRoi = np.zeros((imgSize.y, imgSize.x), np.uint8)  # create new binary black image
-        imgRoi[roiGap.y:imgSize.y, roiGap.x:imgSize.x - roiGap.x] = roi  # add roi to black image
+    if debug:
+        cv2.imshow('Canny ROI', imgRoi)
 
-        if debug:
-            cv2.imshow('Canny ROI', imgRoi)
+    # set heuristic parameters for the (probabilistic) houghlines function
+    rho = 1     # accuracy [pixel]
+    acc = 0.3   # accuracy [deg]
+    theta = acc * np.pi / 360
+    threshold = int(150 / ratio)  # minimum points on a line
 
-        # set heuristic parameters for the (probabilistic) houghlines function
-        rho = 1     # accuracy [pixel]
-        acc = 0.3   # accuracy [deg]
-        theta = acc * np.pi / 360
-        threshold = int(150 / ratio)  # minimum points on a line
+    # find lines in image using the (probabilistic) houghlines function
+    # outputP:  x1, y1, x2, y2
+    # output:   rho, theta
+    lines = cv2.HoughLines(imgRoi, rho, theta, threshold)
+    # lines = cv2.HoughLinesP(imgRoi, rho, acc, 100, minLineLength, maxLineGap)
 
-        # find lines in image using the (probabilistic) houghlines function
-        # outputP:  x1, y1, x2, y2
-        # output:   rho, theta
-        lines = cv2.HoughLines(imgRoi, rho, theta, threshold)
-        # lines = cv2.HoughLinesP(imgRoi, rho, acc, 100, minLineLength, maxLineGap)
+    # check if houghlines function found any lines, if not print error
+    if lines is not None:
+        exitflag = 1   # houghlines function found at least one line
 
-        # check if houghlines function found any lines, if not print error
-        if lines is not None:
-            exitflag = 1   # houghlines function found at least one line
+        xvalues = []
+        intersects = []
 
-            xvalues = []
-            intersects = []
+        # Get values rho and theta from houghlines
+        rho = [line[0][0] for line in lines]
+        theta = [line[0][1] for line in lines]
 
-            # Get values rho and theta from houghlines
-            rho = [line[0][0] for line in lines]
-            theta = [line[0][1] for line in lines]
+        # Create histogram with n bins (possible values) from 0 to pi (range of theta)
+        bins = 60
+        thhist, thbins = np.histogram(theta, bins, [0, np.pi])
 
-            # Create histogram with n bins (possible values) from 0 to pi (range of theta)
-            bins = 60
-            thhist, thbins = np.histogram(theta, bins, [0, np.pi])
+        # Find angles that occur more than the treshold and save that angle
+        treshold = 0
+        histangles = []  # Array for storing all angles from the histogram
+        for i in range(0, len(thhist)):
+            if np.amax(thhist) > treshold:  # Found feasible maximum
+                anglepos = np.argmax(thhist)  # Get position of maximum
+                angle = anglepos * np.pi / bins  # Calculate value of maximum
+                thhist[anglepos] = 0  # Set histogram value to 0, so we won't find this maximum next iteration
+                if anglepos - 1 >= 0:  # Check if the position is in bounds of the histogram
+                    thhist[anglepos - 1] = 0  # Set the neighbour values to zero as well
+                if anglepos + 2 <= len(thhist):
+                    thhist[anglepos + 1] = 0
+                # print(angle)
+                # Filter out lines of the perspective transformation
+                if not 0.733-0.1 < angle < 0.733+0.1 and not 2.356-0.1 < angle < 2.356+0.1:
+                    # and not np.pi*0.45 < angle < np.pi*0.55
+                    histangles.append(angle)  # Append theta value of the peak to angle
 
-            # Find angles that occur more than the treshold and save that angle
-            treshold = 0
-            histangles = []  # Array for storing all angles from the histogram
-            for i in range(0, len(thhist)):
-                if np.amax(thhist) > treshold:  # Found feasible maximum
-                    anglepos = np.argmax(thhist)  # Get position of maximum
-                    angle = anglepos * np.pi / bins  # Calculate value of maximum
-                    thhist[anglepos] = 0  # Set histogram value to 0, so we won't find this maximum next iteration
-                    if anglepos - 1 >= 0:  # Check if the position is in bounds of the histogram
-                        thhist[anglepos - 1] = 0  # Set the neighbour values to zero as well
-                    if anglepos + 2 <= len(thhist):
-                        thhist[anglepos + 1] = 0
-                    # print(angle)
-                    # Filter out lines of the perspective transformation
-                    if not 0.733-0.1 < angle < 0.733+0.1 and not 2.356-0.1 < angle < 2.356+0.1:
-                        # and not np.pi*0.45 < angle < np.pi*0.55
-                        histangles.append(angle)  # Append theta value of the peak to angle
+        all_angles = [[] for _ in range(len(histangles))]  # Make an array with n arrays, for all found angles from hist
+        tres = np.pi / bins  # Define a certain treshold
 
-            all_angles = [[] for _ in range(len(histangles))]  # Make an array with n arrays, for all found angles from hist
-            tres = np.pi / bins  # Define a certain treshold
+        # plot red(0, 0, 255) houghlines in image
+        for x in range(0, len(lines)):
+            for rho, theta in lines[x]:
+                a = np.cos(theta)
+                b = np.sin(theta)
+                x0 = a * rho
+                y0 = b * rho
+                x1 = int(x0 + 1000 * (-b))
+                y1 = int(y0 + 1000 * a)
+                x2 = int(x0 - 1000 * (-b))
+                y2 = int(y0 - 1000 * a)
+                if debug:
+                    cv2.line(dst, (x1, y1), (x2, y2), (0, 0, 255), 2)
+                # Compare theta with the histogram angle, if within certain interval, store in all_angles
+                for i in range(0, len(histangles)):
+                    if histangles[i] - tres < theta < histangles[i] + tres:
+                        all_angles[i].append([theta, rho])
 
-            # plot red(0, 0, 255) houghlines in image
-            for x in range(0, len(lines)):
-                for rho, theta in lines[x]:
-                    a = np.cos(theta)
-                    b = np.sin(theta)
-                    x0 = a * rho
-                    y0 = b * rho
-                    x1 = int(x0 + 1000 * (-b))
-                    y1 = int(y0 + 1000 * a)
-                    x2 = int(x0 - 1000 * (-b))
-                    y2 = int(y0 - 1000 * a)
-                    if debug:
-                        cv2.line(dst, (x1, y1), (x2, y2), (0, 0, 255), 2)
-                    # Compare theta with the histogram angle, if within certain interval, store in all_angles
-                    for i in range(0, len(histangles)):
-                        if histangles[i] - tres < theta < histangles[i] + tres:
-                            all_angles[i].append([theta, rho])
-
-            rhovalues = [[] for _ in range(len(all_angles))]  # [[rho 1, ~rho 1, ...], [rho2, ~rho2, ...], ...]
+        rhovalues = [[] for _ in range(len(all_angles))]  # [[rho 1, ~rho 1, ...], [rho2, ~rho2, ...], ...]
 
         for i in range(0, len(all_angles)):
             rho = [x[1] for x in all_angles[i]]
@@ -344,10 +344,4 @@ def lanedetection():
         # print(avg_line_values)
         # print(inter_left)
         # print(inter_right)
-        print(go_to)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+    return go_to
