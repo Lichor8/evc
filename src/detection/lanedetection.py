@@ -42,7 +42,7 @@ def intersection(L1, L2):
     else:
         return False
 
-debug = True
+debug = False
 
 # def gettarget():
 #     print(go_to)

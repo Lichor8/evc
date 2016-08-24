@@ -33,7 +33,7 @@ def detectshapes(frame):
 
     # resized = cv2.GaussianBlur(resized, (5, 5), 0)
 
-    size_sign = 0.15     # absolute size of a traffic sign in meters
+    size_sign = 0.138     # absolute size of a traffic sign in meters
 
     ratio = image.shape[0] / float(resized.shape[0])
     th = 100/ratio  # treshold for center of direction sign
