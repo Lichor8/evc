@@ -2,11 +2,13 @@
 import rhal.rhal
 import detection.detection
 import strategy.strategy
+import strategy.follow_postit
 
 # create robot objects from classes
 rhal = rhal.rhal.Rhal()
 det = detection.detection.Detection()
 strat = strategy.strategy.Strategy()
+fol = strategy.follow_postit.Follow()
 
 # initialize io
 # rhal.io()
@@ -31,10 +33,11 @@ while io_ok:
 
         # trigger coordinator/composer of detection
         # det.detection()
-        strat.strategy()
+        # strat.strategy()
         # print(det.gettarget())
         # gappos = det.getgappos()
         # print("correct gapposition",gappos)
 
+        fol.follow()
         # stop main loop
         # break
