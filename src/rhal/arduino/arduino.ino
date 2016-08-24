@@ -47,6 +47,8 @@ void loop()
   int mov_type = -1;
   float x_d = 0.0;
   float y_d = 1.0;
+  float turn_r = 0.0;
+  float drive_m = 0.0;
   float turn_deg = 0;
   float stop_sec = 0;  
   
@@ -54,18 +56,12 @@ void loop()
   while(1)
   {    
     // receive rpi information   
-    rpi2arduino(mov_type, x_d, y_d, turn_deg, stop_sec); 
+    rpi2arduino(mov_type, x_d, y_d, turn_r, drive_m, turn_deg, stop_sec); 
     //Serial.println(x_d);
     //Serial.println(y_d);
 
     // act according to selected movement type
-    // if movement type is drive between lines (mov_type = 0) 
-    // if movement type is turn left (mov_type = 1)
-    // if movement type is straight (mov_type = 2)
-    // if movement type is turn right (mov_type = 3)
-    // if movement type is turn (mov_type = 4)
-    // if movement type is stop (mov_type = 5)
-    movement(mov_type, x_d, y_d, turn_deg, stop_sec);    
+    movement(mov_type, x_d, y_d, turn_r, drive_m, turn_deg, stop_sec);    
   } 
 }
 

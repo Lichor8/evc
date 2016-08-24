@@ -19,8 +19,13 @@ while io_ok:
     if io_read:
 
         # set data to send to arduino
-        sdata = '1x1|y1|'
-        # sdata = '0x0|y1|'       # stop arduino
+        sdata = '0x1|y1|'       # mov_type = 0 (drive between lines),   xy (goal location) in [m]
+        sdata = '1r0.2|'        # mov_type = 1 (turn left),             r (turn radius) in [m]
+        sdata = '2d1'           # mov_type = 2 (drive),                 d (distance) in [m]
+        sdata = '3r0.2'         # mov_type = 3 (turn right),            r (turn radius) in [m]
+        sdata = '4a180'         # mov_type = 4 (turn),                  a (angle) in [deg]
+        sdata = '5t6'           # mov_type = 5 (stop),                  t (time) in [s]
+
         rhal.setsdata(sdata)
 
         # trigger coordinator/composer of rhal

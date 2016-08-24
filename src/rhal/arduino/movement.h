@@ -5,7 +5,7 @@
 #include <Arduino.h>
 
 // functions
-void movement(int mov_type, float x_d, float y_d, float turn_deg, float stop_sec);
+void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, float turn_deg, float stop_sec);
 void sleep(float sensor_time, float ts);
 
 #endif

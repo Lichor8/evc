@@ -4,7 +4,7 @@
 
 
 // functions
-void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_deg, float &stop_sec)
+void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_r, float &drive_m, float &turn_deg, float &stop_sec)
 {
   // initialize rpiData
   String rpiData; 
@@ -24,35 +24,41 @@ void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_deg, float &
     if(mov_type == 0 && rpiData[1] == 'x')//rpiData[1] == 'x'  //mov_type == 0
     {
       x_d = read_data(begin_index, rpiData, end_index);
-      //Serial.println(x_d);
-      digitalWrite(13, LOW);
           
       if(mov_type == 0 && rpiData[1 + end_index] == 'y')
       {
         y_d = read_data(begin_index + end_index, rpiData, end_index);
-        //Serial.println(y_d);
       }
     }
     
-    // if movement type is turn left (mov_type = 1) then read omega
-//    if(mov_type == 1 && rpiData[1] == 'w')
-//    {
-//      turn_deg = read_data(begin_index, rpiData, end_index);
-//      //Serial.println(turn_deg);
-//    }
+    // if movement type is turn left (mov_type = 1) then read turn radius
+    if(mov_type == 1 && rpiData[1] == 'r')
+    {
+      turn_r = read_data(begin_index, rpiData, end_index);
+    }
+    
+    // if movement type is drive (mov_type = 2) then read distance
+    if(mov_type == 2 && rpiData[1] == 'd')
+    {
+      drive_m = read_data(begin_index, rpiData, end_index);
+    }
+    
+    // if movement type is turn left (mov_type = 3) then read turn radius
+    if(mov_type == 3 && rpiData[1] == 'r')
+    {
+      turn_r = read_data(begin_index, rpiData, end_index);
+    }
     
     // if movement type is turn (mov_type = 4) then read degrees
-    if(mov_type == 4 && rpiData[1] == 'd')
+    if(mov_type == 4 && rpiData[1] == 'a')
     {
       turn_deg = read_data(begin_index, rpiData, end_index);
-      //Serial.println(turn_deg);
     }
         
     // if movement type is stop (mov_type = 5) then read stop time
     if(mov_type == 5 && rpiData[1] == 't')
     {
       stop_sec = read_data(begin_index, rpiData, end_index);
-      //Serial.println(stop_sec);
     }
   }
 }

@@ -1,15 +1,16 @@
 // act according to selected movement type
 // if movement type is drive between lines (mov_type = 0) 
 // if movement type is turn left (mov_type = 1)
-// if movement type is straight (mov_type = 2)
+// if movement type is drive (mov_type = 2) then drive the recieved amount of meters
 // if movement type is turn right (mov_type = 3)
-// if movement type is turn (mov_type = 4)
+// if movement type is turn (mov_type = 4) then turn the recieved amount of degrees
 // if movement type is stop (mov_type = 5)
 
 // import libraries
 #include <Arduino.h>
 #include "movement.h"
 #include "motorcontrol.h"
+#include "sensors.h"
 
 // global variables
 #define PWM_L 9
@@ -40,11 +41,14 @@ const float pi = 3.14159;
   float y_a   = 0.0;  // using coordinate frame on the robot (relative) so actual is always 0
   float phi_d = 0.0;  // initialize
   
-  // outer loop control
-  float e_old = 0.0;
-  float E = 0.0;
+  // position control loop
+  float e_old_p = 0.0;
+  float E_p = 0.0;
   float omega = 0.0;
   float v     = 0.0;
+  float stop_timer = 0.0;
+  float pulse_count_start = 0.0;
+  int execute_start = 1;
   
   // encoder loop  
   int motor_encoder_l_old = 0;
@@ -55,6 +59,10 @@ const float pi = 3.14159;
   int pulse_count_r_old = 0;
   
   // velocity control loop
+  float e_old_l = 0.0;
+  float e_old_r = 0.0;
+  float E_l = 0.0;  
+  float E_r = 0.0;
   float motor_encoder_srtime_l = 0.0;
   float motor_encoder_srtime_r = 0.0;
   float motor_encoder_srtime_l_previous = 0.0;
@@ -69,219 +77,237 @@ const float pi = 3.14159;
   const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
   
 // functions
-void movement(int mov_type, float x_d, float y_d, float turn_deg, float stop_sec)
-{    
+void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, float turn_deg, float stop_sec)
+{  
+  // inverse kinematics
+  const float R = 0.07;         // [m]
+  const float L = 0.45;         // [m]
+  float theta_dot_d_l = 0.0;  
+  float theta_dot_d_r = 0.0;    
+  
+  // act according to selected movement type
+  // if movement type is drive between lines (mov_type = 0) 
+  if (mov_type == 0)
+  {      
     // location2angle (use when actual location is available)
     //phi_a = pi;   
     //x_a   = 0.0;    
     //y_a   = 0.0;    
     phi_d = atan2(y_d - y_a, x_d - x_a);
-        
+      
     // position(outer) control loop (pcontrol_freq)
-    pcontrol(phi_d, phi_a, omega, v, e_old, E);  
+    pcontrol(phi_d, phi_a, omega, v, e_old_p, E_p);  
     Serial.println(omega);
     
     // inverse kinematics
-    const float R = 0.07;         // [m]
-    const float L = 0.45;         // [m]
-    float theta_dot_d_l = 0.0;  
-    float theta_dot_d_r = 0.0;    
-    
-    if (mov_type == 0)
+    theta_dot_d_r = (2*v + omega*L)/(2*R);  // [rad/s]
+    theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
+  }    
+  // if movement type is turn left (mov_type = 1)
+  if (mov_type == 1)
+  {    
+    if (execute_start = 1)
     {
-      theta_dot_d_r = (2*v + omega*L)/(2*R);  // [rad/s]
-      theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
-    }    
-    if (mov_type == 1)
-    {
-      omega = pi;
-      float r1 = 0.2;             // inner turn radius [m]
-      float r2 = r1 + L;          // outer turn radius [m]
-      theta_dot_d_r = omega/r2;  // [rad/s]
-      theta_dot_d_l = omega/r1;  // [rad/s]
+      pulse_count_start = pulse_count_r;
+      execute_start = 0;      
     }
-    if (mov_type == 2)
+    omega = pi/4;               // turning speed [rad/s] 
+    float r1 = 0.2;             // inner turn radius [m]
+    float r2 = r1 + L;          // outer turn radius [m]
+    theta_dot_d_r = omega/r2;   // [rad/s]
+    theta_dot_d_l = omega/r1;   // [rad/s]    
+    
+    // pulse2meters (12 magnets in sensor, gear ratio 34:1)
+    float dp = pulse_count_r - pulse_count_start;
+    float ds = R*dp*2*pi/(12*34);   // [m]
+    
+    // if traveled distance is half a turn
+    if (ds >= pi/2)
     {
-      theta_dot_d_r = -omega;  // [rad/s]
-      theta_dot_d_l = -omega;  // [rad/s]
+      Serial.println("done1");
+      execute_start = 1;
     }
-    if (mov_type == 3)
+    else
     {
-      float r1 = 0.2;             // inner turn radius [m]
-      float r2 = r1 + L;          // outer turn radius [m]
-      theta_dot_d_r = -omega/r1;  // [rad/s]
-      theta_dot_d_l = -omega/r2;  // [rad/s]
-    }    
-    if (mov_type == 4)
-    {
-      theta_dot_d_r = pi/2;              // [rad/s]
-      theta_dot_d_l = -theta_dot_d_r;    // [rad/s]
-    }    
-    if (mov_type == 5)
-    {
-      theta_dot_d_r = 0;    // [rad/s]
-      theta_dot_d_l = 0;    // [rad/s]
+      Serial.println("execute1");
     }
-    
-    // variables for sensor sample loop (sensor_freq)
-    int MotorL = 0;
-    int MotorR = 0;  
-    //Serial.println(MotorL);
-    //Serial.println(MotorR);    
-    //Serial.println(pulse_count_l);
-    
-    // sensor sample loop (sensor_freq)
-    int i = 0;
-    int j = 1;
-    while(i < sensor_freq/pcontrol_freq)
+  }
+  // if movement type is drive (mov_type = 2)
+  if (mov_type == 2)
+  {
+    if (execute_start = 1)
     {
-      float start_sensor_timer = millis();
-      
-      // read sensors
-      float dc_current_a_l = 0.0;
-      float dc_current_a_r = 0.0;    
-      //dc_current_a_l = 
-      //dc_current_a_r = 
-
-      // if i = 1, 6, 11, 16, ... then set start time
-      // x(j-1) + 1 = xj - (x-1) = 5j - 4 = 1, 6, 11, 16, ...
-      //if(i == (sensor_freq/(pcontrol_freq*scontrol_freq))*(j-1) + 1 )
-      //{
-      //  Serial.println(i);
-      //  motor_encoder_srtime_l = millis();    
-      //  motor_encoder_srtime_r = millis();
-      //}    
+      pulse_count_start = pulse_count_l;
+      execute_start = 0;      
+    }
+    theta_dot_d_r = v;  // [rad/s]
+    theta_dot_d_l = v;  // [rad/s]
     
-      // if i = 0, 5, 10, 15, ... then set start time
-      if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
-      {
-        //Serial.println(i);
-        motor_encoder_srtime_l = millis();    
-        motor_encoder_srtime_r = millis();
-      }   
-      
-      int motor_encoder_l = digitalRead(2);
-      int motor_encoder_r = digitalRead(3);
-      
-      if(motor_encoder_l == 1 && motor_encoder_l_old == 0) 
-      {
-        pulse_count_l++;      
-      }
-      motor_encoder_l_old = motor_encoder_l;       
-       
-      if(motor_encoder_r == 1 && motor_encoder_r_old == 0) 
-      {
-        pulse_count_r++;      
-      }
-      motor_encoder_r_old = motor_encoder_r;   
-      
-      // speed control loop (scontrol_freq)
-      if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
-        {
-          //// left motor 
-          // end read time of encoder
-          float motor_encoder_ertime_l = millis(); 
-          
-          // calculate differences
-          float dt_l = (motor_encoder_ertime_l - motor_encoder_srtime_l_previous)/1000; //[s]
-          float dp_l = pulse_count_l - pulse_count_l_old;
-          
-          // pulse2rad (12 magnets in sensor, gear ratio 34:1)
-          float ds_l = dp_l*2*pi/(12*34);   // [rad]
-          
-          // calculate speed
-          theta_dot_a_l = ds_l/dt_l;        // [rad/s]
-          
-          //// right motor 
-          // end read time of encoder       
-          float motor_encoder_ertime_r = millis();  
-          
-          // calculate differences
-          float dt_r = (motor_encoder_ertime_r - motor_encoder_srtime_r_previous)/1000; // [s]
-          float dp_r = pulse_count_r - pulse_count_r_old;
-          
-          // pulse2rad (12 magnets in sensor, gear ratio 34:1)
-          float ds_r = dp_r*2*pi/(12*34);    // [rad]
-          
-          // calculate speed
-          theta_dot_a_r = ds_r/dt_r;  // [rad/s]
-              
-          // static controller gains
-          const int K[2] = {0.3101, -0.0688};
-          const int F = 0;
-              
-          //Serial.println(j*5);
-          //if(dp_l != 0)
-          //{
-          //  Serial.println(dp_l);
-          //}
-          //if(dp_r != 0)
-          //{
-          //  Serial.println(dp_r);
-          //}
-          //Serial.println(dt_l);
-          //Serial.println(dt_r);
-          //if(theta_dot_a_l != 0)
-          //{
-          // Serial.println(theta_dot_a_l);
-          //}
-          //if(theta_dot_a_r != 0)
-          //{
-          //  Serial.println(theta_dot_a_r);
-          //}
-          
-          // act according to selected movement type
-          // drive between lines (mov_type = 0)
-          if (mov_type == 0)
-          {
-            // PID controller
-            float r_l = theta_dot_d_l;
-            float x1_l = theta_dot_a_l;  
-            float x2_l = dc_current_a_l;
-            //float c_l = K[0]*x1_l + K[1]*x2_l + F*r_l;
-            float c_l = (theta_dot_d_l - theta_dot_a_l)*1;
-            MotorL = 255*c_l;
-            
-            float r_r = theta_dot_d_r;
-            float x1_r = theta_dot_a_r;
-            float x2_r = dc_current_a_r;
-            //float c_r = K[0]*x1_r + K[1]*x2_r + F*r_r;
-            float c_r = (theta_dot_d_r - theta_dot_a_r)*1;
-            MotorR = 255*c_r;
-          }
-          // turn left (mov_type = 1)
-          if (1)
-          {
-            float c_l = (theta_dot_d_l - theta_dot_a_l)*1;
-            MotorL = 255*c_l;
-            
-            float c_r = (theta_dot_d_r - theta_dot_a_r)*1;
-            MotorR = 255*c_r;
-          }
-          
-          // if movement type is straight (mov_type = 2)
-          // if movement type is turn right (mov_type = 3)
-          // if movement type is turn (mov_type = 4)
-          // if movement type is stop (mov_type = 5)
-          
-          //Serial.println(c_l);
-          
-          // motor control (minimum needed is 150?)
-          setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
-          setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR); 
-          
-          pulse_count_l_old = pulse_count_l;
-          pulse_count_r_old = pulse_count_r;
-          j++;
-        }
-      
-      // use the read start time of one step before, the previous step
-      motor_encoder_srtime_l_previous = motor_encoder_srtime_l;
-      motor_encoder_srtime_r_previous = motor_encoder_srtime_r;
-        
-      i++;
-      sleep(sensor_time, start_sensor_timer);
+    // pulse2meters (12 magnets in sensor, gear ratio 34:1)
+    float dp = pulse_count_l - pulse_count_start;
+    float ds = R*dp*2*pi/(12*34);   // [m]
+    
+    // if traveled distance is drive_m then ask for next command
+    if (ds >=  drive_m)
+    {
+      Serial.println("done2");
+      execute_start = 1;
+    }
+    else
+    {
+      Serial.println("execute2");
+    }
+  }
+  // if movement type is turn right (mov_type = 3)
+  if (mov_type == 3)
+  {
+    if (execute_start = 1)
+    {
+      pulse_count_start = pulse_count_l;
+      execute_start = 0;      
+    }
+    omega = pi/4;               // turning speed [rad/s]
+    float r1 = 0.2;             // inner turn radius [m]
+    float r2 = r1 + L;          // outer turn radius [m]
+    theta_dot_d_r = -omega/r1;  // [rad/s]
+    theta_dot_d_l = -omega/r2;  // [rad/s]
+    
+    // pulse2meters (12 magnets in sensor, gear ratio 34:1)
+    float dp = pulse_count_l - pulse_count_start;
+    float ds = R*dp*2*pi/(12*34);   // [m]
+    
+    // if traveled distance is half a turn then ask for next command
+    if (ds >= pi/2)
+    {
+      Serial.println("done3");
+      execute_start = 1;
+    }
+    else
+    {
+      Serial.println("execute3");
+    }
+  }    
+  // if movement type is turn (mov_type = 4)
+  if (mov_type == 4)
+  {
+    if (execute_start = 1)
+    {
+      pulse_count_start = pulse_count_l;
+      execute_start = 0;      
+    }
+    theta_dot_d_r = pi/2;              // [rad/s]
+    theta_dot_d_l = -theta_dot_d_r;    // [rad/s]
+    
+    // pulse2meters (12 magnets in sensor, gear ratio 34:1)
+    float dp = pulse_count_l - pulse_count_start;
+    float ds = R*dp*2*pi/(12*34);               // [m]
+    float turn = L*turn_deg*pi/180;             // [m]
+    
+    // if traveled distance is turn_deg then ask for next command
+    if (ds >= turn)
+    {
+      Serial.println("done4");
+      execute_start = 1;
+    }
+    else
+    {
+      Serial.println("execute4");
+    }
+  }    
+  // if movement type is stop (mov_type = 5)
+  if (mov_type == 5)
+  {   
+    theta_dot_d_r = 0;    // [rad/s]
+    theta_dot_d_l = 0;    // [rad/s]
+     
+    // start stop timer
+    stop_timer = millis();
+    
+    // wait stop_sec amount of seconds then ask for next command
+   if (stop_timer >= stop_sec)
+   {
+     Serial.println("done5");
+   }
+   else
+    {
+      Serial.println("execute5");
+    }
+  } 
+  
+  // sensor sample loop (sensor_freq)
+  int i = 0;
+  int j = 1;
+  while(i < sensor_freq/pcontrol_freq)
+  {
+    float start_sensor_timer = millis();
+  
+    // if i = 0, 5, 10, 15, ... then set start time
+    if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
+    {
+      //Serial.println(i);
+      motor_encoder_srtime_l = millis();    
+      motor_encoder_srtime_r = millis();
     }   
+    
+    int motor_encoder_l = digitalRead(2);
+    int motor_encoder_r = digitalRead(3);
+    
+    if(motor_encoder_l == 1 && motor_encoder_l_old == 0) 
+    {
+      pulse_count_l++;      
+    }
+    motor_encoder_l_old = motor_encoder_l;       
+     
+    if(motor_encoder_r == 1 && motor_encoder_r_old == 0) 
+    {
+      pulse_count_r++;      
+    }
+    motor_encoder_r_old = motor_encoder_r;   
+    
+    // speed control loop (scontrol_freq)
+    // if i = 0, 5, 10, 15, ...
+    if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
+      {
+        // calculate speed from motor encoders
+        theta_dot_a_l = avelocity(motor_encoder_srtime_l_previous, pulse_count_l, pulse_count_l_old);
+        theta_dot_a_r = avelocity(motor_encoder_srtime_r_previous, pulse_count_r, pulse_count_r_old);
+            
+        // debug statements
+        //if(theta_dot_a_l != 0)
+        //{
+        // Serial.println(theta_dot_a_l);
+        //}
+        //if(theta_dot_a_r != 0)
+        //{
+        //  Serial.println(theta_dot_a_r);
+        //}
+        
+        // calculate c (duty cycle) using scontrol() controller
+        // and transform to arduino motor voltages        
+        float c_l = scontrol(theta_dot_d_l, theta_dot_a_l, e_old_l, E_l);
+        int MotorL = 255*c_l;
+        
+        float c_r = scontrol(theta_dot_d_r, theta_dot_a_r, e_old_r, E_r);
+        int MotorR = 255*c_r;          
+        
+        //Serial.println(c_l);
+        
+        // set motor voltages (minimum needed is 150?)
+        setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
+        setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR); 
+        
+        pulse_count_l_old = pulse_count_l;
+        pulse_count_r_old = pulse_count_r;
+        j++;
+      }
+    
+    // use the read start time of one step before, the previous step
+    motor_encoder_srtime_l_previous = motor_encoder_srtime_l;
+    motor_encoder_srtime_r_previous = motor_encoder_srtime_r;
+      
+    i++;
+    sleep(sensor_time, start_sensor_timer);
+  }   
 }  
     
 void sleep(float sensor_time, float ts) 
