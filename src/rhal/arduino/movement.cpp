@@ -217,11 +217,14 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is stop (mov_type = 5)
   if (mov_type == 5)
   {   
+    if (execute_start = 1)
+    {
+      // start stop timer
+      stop_timer = millis()/1000;  // [s]
+      execute_start = 0;      
+    }
     theta_dot_d_r = 0;    // [rad/s]
-    theta_dot_d_l = 0;    // [rad/s]
-     
-    // start stop timer
-    stop_timer = millis();
+    theta_dot_d_l = 0;    // [rad/s]    
     
     // wait stop_sec amount of seconds then ask for next command
    if (stop_timer >= stop_sec)
