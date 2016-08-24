@@ -38,7 +38,17 @@ class Strategy:
             for i in range(0, 5):
                 sign_array[0][i] = row_avg(sign_matrix[:, i])
 
-            print(sign_array[0])
+            # print(sign_array[0])
+
+            sign_index = 0
+            dist = 0
+            execute = ""
+
+            if sign_array[0][sign_array[0] > 0]:
+                dist = np.min(sign_array[0][sign_array[0] > 0])
+                for i in range(0, 5):
+                    if sign_array[0][i] == dist:
+                        sign_index = i + 1
 
             do_lanedetection = 1
 
@@ -46,24 +56,33 @@ class Strategy:
                 if sign_array[0][i] != 0 and sign_array[0][i] < dist_tres:
                     do_lanedetection = 0
 
-            # if np.argmin(sign_array[0]):
-            #     sign_index = np.argmin(sign_array[0])
-            #     print(sign_index)
-            #     if sign_index == 0:
-            #         sign = "uturn"
-            #         print("uturn")
-            #     elif sign_index == 1:
-            #         sign = "stop"
-            #         print(sign)
-            #     elif sign_index == 2:
-            #         sign = "left"
-            #         print(sign)
-            #     elif sign_index == 3:
-            #         sign = "right"
-            #         print(sign)
-            #     elif sign_index == 4:
-            #         sign = "straight"
-            #         print(sign)
+            if np.argmin(sign_array[0]):
+                sign_index = np.argmin(sign_array[0])
+                if sign_index == 1:
+                    sign = "uturn"
+                    if do_lanedetection == 0:
+                        execute = "execute"
+                    print(execute, sign, "sign at", dist, "meter")
+                elif sign_index == 2:
+                    sign = "stop"
+                    if do_lanedetection == 0:
+                        execute = "execute"
+                    print(execute, sign, "sign at", dist, "meter")
+                elif sign_index == 3:
+                    sign = "left"
+                    if do_lanedetection == 0:
+                        execute = "execute"
+                    print(execute, sign, "sign at", dist, "meter")
+                elif sign_index == 4:
+                    sign = "right"
+                    if do_lanedetection == 0:
+                        execute = "execute"
+                    print(execute, sign, "sign at", dist, "meter")
+                elif sign_index == 5:
+                    sign = "straight"
+                    if do_lanedetection == 0:
+                        execute = "execute"
+                    print(execute, sign, "sign at", dist, "meter")
 
             if do_lanedetection:
                 target = lanedetection.lanedetection(frame)

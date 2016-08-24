@@ -13,7 +13,7 @@ class Point:
         self.y = y
 # Point = namedtuple('Point', 'y, x')   # point in cartesian coordinates
 
-debug = True
+debug = False
 
 def detectshapes(frame):
     # create instance of namedtuples and initialize

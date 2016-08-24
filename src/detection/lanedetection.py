@@ -73,7 +73,7 @@ def lanedetection(frame):
     y4 = imgSize.y
 
     # rows, cols, ch = img.shape
-    resizeratio = 1
+    resizeratio = 1.5
     W = int(imgSize.x/resizeratio)
     H = int(imgSize.y/resizeratio)
 
@@ -94,7 +94,7 @@ def lanedetection(frame):
     imgBlurred = cv2.GaussianBlur(dst, (5, 5), 0)
     gray_image = cv2.cvtColor(imgBlurred, cv2.COLOR_BGR2GRAY)
 
-    thresh = 120
+    thresh = 150
     th, tresholded = cv2.threshold(gray_image, thresh, 255, cv2.THRESH_BINARY)
 
     imgCanny = cv2.Canny(tresholded, 150, 250, apertureSize=3)
@@ -122,7 +122,7 @@ def lanedetection(frame):
     rho = 1     # accuracy [pixel]
     acc = 0.3   # accuracy [deg]
     theta = acc * np.pi / 360
-    threshold = int(150 / ratio)  # minimum points on a line
+    threshold = int(75 / ratio)  # minimum points on a line
 
     # find lines in image using the (probabilistic) houghlines function
     # outputP:  x1, y1, x2, y2
@@ -146,7 +146,7 @@ def lanedetection(frame):
         thhist, thbins = np.histogram(theta, bins, [0, np.pi])
 
         # Find angles that occur more than the treshold and save that angle
-        treshold = 0
+        treshold = 1
         histangles = []  # Array for storing all angles from the histogram
         for i in range(0, len(thhist)):
             if np.amax(thhist) > treshold:  # Found feasible maximum
