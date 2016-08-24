@@ -46,12 +46,13 @@ while io_ok:
         rdata = rhal.get_rdata()
         # print(rdata)
 
+        # test = "('done', 5)"
         rdata_split = splittedname(rdata)
+        test_split = splittedname('done5')
         # print(rdata_split)
-        test = "('done', 5)"
-        print(test)
+        # print(test)
 
-        if rdata_split == test:
+        if rdata_split == test_split:
             print(rdata)
 
         if set(rdata.split()) == set('done5'):
