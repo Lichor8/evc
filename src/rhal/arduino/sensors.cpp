@@ -13,8 +13,8 @@ float avelocity(float motor_encoder_srtime_previous, int pulse_count, int pulse_
   float motor_encoder_ertime = millis(); 
   
   // calculate differences
-  float dt = (motor_encoder_ertime - motor_encoder_srtime_previous)/1000; //[s]
-  float dp = pulse_count - pulse_count_old;
+  float dt = (motor_encoder_ertime - motor_encoder_srtime_previous)/1000; // [s] dt is always the same value if the loops run at their specified speeds? not always exactly (5 or 6 ms)
+  float dp = pulse_count - pulse_count_old;  // cast into float or divisions might result in 0
   
   // pulse2rad (12 magnets in sensor, gear ratio 34:1)
   float ds = dp*2*pi/(12*34);   // [rad]

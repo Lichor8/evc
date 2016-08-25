@@ -57,8 +57,6 @@ void loop()
   {    
     // receive rpi information   
     rpi2arduino(mov_type, x_d, y_d, turn_r, drive_m, turn_deg, stop_sec); 
-    //Serial.println(x_d);
-    //Serial.println(y_d);
 
     // act according to selected movement type
     movement(mov_type, x_d, y_d, turn_r, drive_m, turn_deg, stop_sec);    

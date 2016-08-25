@@ -47,7 +47,7 @@ const float pi = 3.14159;
   float omega = 0.0;
   float v     = 0.0;
   float stop_timer = 0.0;
-  float pulse_count_start = 0.0;
+  int pulse_count_start = 0;
   int execute_start = 1;
   
   // encoder loop  
@@ -67,14 +67,19 @@ const float pi = 3.14159;
   float motor_encoder_srtime_r = 0.0;
   float motor_encoder_srtime_l_previous = 0.0;
   float motor_encoder_srtime_r_previous = 0.0;
-  float theta_dot_a_l = 0.0;
-  float theta_dot_a_r = 0.0;
+  //float theta_dot_a_l = 0.0;
+  //float theta_dot_a_r = 0.0;
+  //float c_l = 0.0;
+  //float c_r = 0.0;
   
   // set inner/outer loop frequencies
   const float pcontrol_freq = 1.0;               // position controol loop frequency [1/s]
   const float scontrol_freq = 200.0;             // speed control loop frequency     [1/s]
-  const float sensor_freq   = 1000.0;            // sensor sample loop frequency     [1/s]
+  const float sensor_freq   = 10000.0;            // sensor sample loop frequency     [1/s]
   const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
+  
+  // set debug frequency
+  const float debug_freq = 10;  // [1/s]
   
 // functions
 void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, float turn_deg, float stop_sec)
@@ -89,6 +94,8 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is drive between lines (mov_type = 0) 
   if (mov_type == 0)
   {      
+    Serial.println(x_d);
+    Serial.println(y_d);
     // location2angle (use when actual location is available)
     //phi_a = pi;   
     //x_a   = 0.0;    
@@ -102,12 +109,14 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     // inverse kinematics
     theta_dot_d_r = (2*v + omega*L)/(2*R);  // [rad/s]
     theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
+    //Serial.println(theta_dot_d_r);
     
     Serial.println("execute0");
   }    
   // if movement type is turn left (mov_type = 1)
   if (mov_type == 1)
   {    
+    Serial.println(turn_r);
     if (execute_start = 1)
     {
       pulse_count_start = pulse_count_r;
@@ -116,8 +125,8 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     omega = pi/4;               // turning speed [rad/s] 
     float r1 = turn_r;          // inner turn radius [m]
     float r2 = r1 + L;          // outer turn radius [m]
-    theta_dot_d_r = omega/r2;   // [rad/s]
-    theta_dot_d_l = omega/r1;   // [rad/s]    
+    theta_dot_d_r = omega*r2;   // [rad/s]
+    theta_dot_d_l = omega*r1;   // [rad/s]   
     
     // pulse2meters (12 magnets in sensor, gear ratio 34:1)
     float dp = pulse_count_r - pulse_count_start;
@@ -137,6 +146,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is drive (mov_type = 2)
   if (mov_type == 2)
   {
+    Serial.println(drive_m);
     if (execute_start = 1)
     {
       pulse_count_start = pulse_count_l;
@@ -163,6 +173,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is turn right (mov_type = 3)
   if (mov_type == 3)
   {
+    Serial.println(turn_r);
     if (execute_start = 1)
     {
       pulse_count_start = pulse_count_l;
@@ -171,8 +182,8 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     omega = pi/4;               // turning speed [rad/s]
     float r1 = turn_r;          // inner turn radius [m]
     float r2 = r1 + L;          // outer turn radius [m]
-    theta_dot_d_r = -omega/r1;  // [rad/s]
-    theta_dot_d_l = -omega/r2;  // [rad/s]
+    theta_dot_d_r = omega*r1;  // [rad/s]
+    theta_dot_d_l = omega*r2;  // [rad/s]
     
     // pulse2meters (12 magnets in sensor, gear ratio 34:1)
     float dp = pulse_count_l - pulse_count_start;
@@ -192,6 +203,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is turn (mov_type = 4)
   if (mov_type == 4)
   {
+    Serial.println(turn_deg);
     if (execute_start = 1)
     {
       pulse_count_start = pulse_count_l;
@@ -219,6 +231,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is stop (mov_type = 5)
   if (mov_type == 5)
   {   
+    Serial.println(stop_sec);
     if (execute_start = 1)
     {
       // start stop timer
@@ -242,6 +255,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // sensor sample loop (sensor_freq)
   int i = 0;
   int j = 1;
+  int k = 1;
   while(i < sensor_freq/pcontrol_freq)
   {
     float start_sensor_timer = millis();
@@ -274,10 +288,56 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
       {
         // calculate speed from motor encoders
-        theta_dot_a_l = avelocity(motor_encoder_srtime_l_previous, pulse_count_l, pulse_count_l_old);
-        theta_dot_a_r = avelocity(motor_encoder_srtime_r_previous, pulse_count_r, pulse_count_r_old);
-            
-        // debug statements
+        float theta_dot_a_l = avelocity(motor_encoder_srtime_l_previous, pulse_count_l, pulse_count_l_old);
+        float theta_dot_a_r = avelocity(motor_encoder_srtime_r_previous, pulse_count_r, pulse_count_r_old);
+        
+        // int to float problem?
+        float dp = pulse_count_r - pulse_count_r_old;  
+        float ds = dp*2*pi/(12*34);   // [rad]
+
+//        // PID controller for c (duty cycle)
+//        const float Kp = 2.0;
+//        const float Ki = 0.0;
+//        const float Kd = 0.0;
+//       
+//        float e = theta_dot_d_l - theta_dot_a_l;    
+//        float e_dot_l = e - e_old_l;
+//        E_l = E_l + e;
+//        e_old_l = e;    
+//        float c_l = Kp*e + Ki*E_l + Kd*e_dot_l;
+//        
+//        e = theta_dot_d_r - theta_dot_a_r;\
+//        float e_dot_r = e - e_old_r;
+//        E_r = E_r + e;
+//        e_old_r = e;        
+//        float c_r = Kp*e + Ki*E_r + Kd*e_dot_r;
+        
+        // calculate c (duty cycle) using scontrol() controller and transform to arduino motor voltages        
+        float c_l = scontrol(theta_dot_d_l, theta_dot_a_l, e_old_l, E_l);        
+        int MotorL = 255*c_l;
+        
+        float c_r = scontrol(theta_dot_d_r, theta_dot_a_r, e_old_r, E_r);
+        int MotorR = 255*c_r;         
+       
+        // turn motors completely off if a stop is issued
+        if (mov_type == 5) 
+        {
+          MotorL = 0;
+          MotorR = 0;
+        }
+        
+        //Serial.println(c_l);
+        
+        // set motor voltages (minimum needed is 150?)
+        setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
+        setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR);
+       
+        // debug statements (debug_freq)
+        if (i == sensor_freq/(pcontrol_freq*debug_freq)*k)
+        {
+          Serial.println(dp);   // sample frequency increases dp?
+          k++; 
+        }      
         //if(theta_dot_a_l != 0)
         //{
         // Serial.println(theta_dot_a_l);
@@ -285,21 +345,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
         //if(theta_dot_a_r != 0)
         //{
         //  Serial.println(theta_dot_a_r);
-        //}
-        
-        // calculate c (duty cycle) using scontrol() controller
-        // and transform to arduino motor voltages        
-        float c_l = scontrol(theta_dot_d_l, theta_dot_a_l, e_old_l, E_l);
-        int MotorL = 255*c_l;
-        
-        float c_r = scontrol(theta_dot_d_r, theta_dot_a_r, e_old_r, E_r);
-        int MotorR = 255*c_r;          
-        
-        //Serial.println(c_l);
-        
-        // set motor voltages (minimum needed is 150?)
-        setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
-        setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR); 
+        //} 
         
         pulse_count_l_old = pulse_count_l;
         pulse_count_r_old = pulse_count_r;
@@ -313,6 +359,14 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     i++;
     sleep(sensor_time, start_sensor_timer);
   }   
+  
+  // debug statements 1 Hz
+  //Serial.println(pulse_count_l);    //a whole turn is 12*34 = 408 pulses
+  //Serial.println(pulse_count_r);
+  //Serial.println(theta_dot_a_r);
+  //Serial.println(theta_dot_a_l);
+  //Serial.println(c_l);
+  //Serial.println(c_r);
 }  
     
 void sleep(float sensor_time, float ts) 
