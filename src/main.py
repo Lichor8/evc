@@ -32,31 +32,26 @@ while io_ok:
     if io_read:
 
         # set data to send to arduino
-        sdata = '0x1|y1|'       # mov_type = 0 (drive between lines),   xy (goal location) in [m]
+        # sdata = '0x1|y1|'       # mov_type = 0 (drive between lines),   xy (goal location) in [m]
         sdata = '1r0.2|'        # mov_type = 1 (turn left),             r (turn radius) in [m]
-        sdata = '2d1|'          # mov_type = 2 (drive),                 d (distance) in [m]
-        sdata = '3r0.2|'        # mov_type = 3 (turn right),            r (turn radius) in [m]
-        sdata = '4a180|'        # mov_type = 4 (turn),                  a (angle) in [deg]
-        sdata = '5t1|'          # mov_type = 5 (stop),                  t (time) in [s]
+        # sdata = '2d1|'          # mov_type = 2 (drive),                 d (distance) in [m]
+        # sdata = '3r0.2|'        # mov_type = 3 (turn right),            r (turn radius) in [m]
+        # sdata = '4a180|'        # mov_type = 4 (turn),                  a (angle) in [deg]
+        # sdata = '5t1|'          # mov_type = 5 (stop),                  t (time) in [s]
 
         rhal.setsdata(sdata)
 
         # trigger coordinator/composer of rhal
         rhal.rhal()
         rdata = rhal.get_rdata()
-        # print(rdata)
+        print(rdata)
 
-        # test = "('done', 5)"
-        rdata_split = splittedname(rdata)
-        test_split = splittedname('done5')
-        # print(rdata_split)
-        # print(test)
-
-        if rdata_split == test_split:
-            print(rdata)
-
-        if set(rdata.split()) == set('done5'):
-            print(rdata)
+        # split and compare two strings to enable if statement
+        # rdata_split = splittedname(rdata)
+        # test_split = splittedname('done5\r\n')
+        #
+        # if rdata_split == test_split:
+        #     print(rdata)
 
         # trigger coordinator/composer of detection
         # det.detection()
