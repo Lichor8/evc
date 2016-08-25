@@ -97,11 +97,13 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
       
     // position(outer) control loop (pcontrol_freq)
     pcontrol(phi_d, phi_a, omega, v, e_old_p, E_p);  
-    Serial.println(omega);
+    //Serial.println(omega);
     
     // inverse kinematics
     theta_dot_d_r = (2*v + omega*L)/(2*R);  // [rad/s]
     theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
+    
+    Serial.println("execute0");
   }    
   // if movement type is turn left (mov_type = 1)
   if (mov_type == 1)
@@ -112,7 +114,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
       execute_start = 0;      
     }
     omega = pi/4;               // turning speed [rad/s] 
-    float r1 = 0.2;             // inner turn radius [m]
+    float r1 = turn_r;          // inner turn radius [m]
     float r2 = r1 + L;          // outer turn radius [m]
     theta_dot_d_r = omega/r2;   // [rad/s]
     theta_dot_d_l = omega/r1;   // [rad/s]    
@@ -167,7 +169,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
       execute_start = 0;      
     }
     omega = pi/4;               // turning speed [rad/s]
-    float r1 = 0.2;             // inner turn radius [m]
+    float r1 = turn_r;          // inner turn radius [m]
     float r2 = r1 + L;          // outer turn radius [m]
     theta_dot_d_r = -omega/r1;  // [rad/s]
     theta_dot_d_l = -omega/r2;  // [rad/s]

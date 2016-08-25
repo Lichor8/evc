@@ -24,10 +24,12 @@ void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_r, float &dr
     if(mov_type == 0 && rpiData[1] == 'x')//rpiData[1] == 'x'  //mov_type == 0
     {
       x_d = read_data(begin_index, rpiData, end_index);
+      Serial.println(x_d);
           
       if(mov_type == 0 && rpiData[1 + end_index] == 'y')
       {
         y_d = read_data(begin_index + end_index, rpiData, end_index);
+        Serial.println(y_d);
       }
     }
     
@@ -35,6 +37,7 @@ void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_r, float &dr
     if(mov_type == 1 && rpiData[1] == 'r')
     {
       turn_r = read_data(begin_index, rpiData, end_index);
+      //Serial.println(turn_r);
     }
     
     // if movement type is drive (mov_type = 2) then read distance
@@ -67,18 +70,38 @@ void rpi2arduino(int &mov_type, float &x_d, float &y_d, float &turn_r, float &dr
 float read_data(int begin_index, String rpiData, int &end_index)
 {
   int k = 0;
-  int data[5];
-  float data_num = 0;
-    
-  while(rpiData[begin_index + k] != '|')
+  int sign = 1;
+  int commals = 0;
+  int commal = 0;
+  float comma = 1.0;      // float is necessary, because pow() gives a float: then turning into 'int' causes rounding/trunancation errors
+  int data[10];
+  float data_num = 0.0;
+  
+  // to proces negative numbers
+  if (rpiData[begin_index] == '-')
   {
-    data[k] = rpiData[begin_index + k]  - '0';
+    sign = -1;
+    begin_index++;    
+  }
+  
+  // turn number string into integers
+  while(rpiData[begin_index + k + commals] != '|')
+  {
+    // to proces floats
+    if (rpiData[begin_index + k] == '.')
+    {
+      commals = 1;     // a comma is present in the number
+      commal = k;      // comma location
+    }
+  
+    data[k] = rpiData[begin_index + k + commals]  - '0';
     //Serial.println(data[k]);
     k++;    
   }
-  end_index = begin_index + k; //3
-  //Serial.println(end_index);
-    
+  end_index = begin_index + k + commals;
+  //Serial.println(end_index); 
+  
+  // concatenate integer numbers saved in data array
   int l = 0;
   while(l < k)
   {
@@ -86,6 +109,16 @@ float read_data(int begin_index, String rpiData, int &end_index)
     //Serial.println(data_num);
     l++;
   }
+  
+  // transform data_num into positive or negative float
+  if (commals)
+  {
+    //Serial.println(end_index);
+    //Serial.println(end_index - 1 - (begin_index + commal));
+    comma = pow(10, (end_index - 1 - (begin_index + commal)));    
+  }
+  //Serial.println(comma);
+  data_num = sign*data_num/comma;
   //Serial.println(data_num);
   return data_num;
 }
