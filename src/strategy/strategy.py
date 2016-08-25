@@ -4,16 +4,15 @@ import cv2
 # import Numpy functions
 import numpy as np
 
-# import libraries
-# from libs import defs
-
 # import computational entities (functions)
 from detection import lanedetection
 from detection import detectshapes
+from rhal import rhal
 # from detection import detectshapes
 # from detection import gapdetection
 # from detection import lineclustering
 
+comm = rhal.Rhal()
 
 class Strategy:
     # coordinator/composer
@@ -22,8 +21,8 @@ class Strategy:
         # initialise
         sign_matrix = np.zeros(shape=(3, 5))    # matrix for storing traffic sign data [distance]
         sign_array = np.zeros(shape=(1, 5))     # array for robustly detected signs
-
         dist_tres = 0.5     # distance treshold
+        standby = 0
 
         # get camera images
         cap = cv2.VideoCapture('../roadtests/video3short.mp4')
@@ -62,33 +61,45 @@ class Strategy:
                     sign = "uturn"
                     if do_lanedetection == 0:
                         execute = "execute"
+                        sdata = "4a180|"
+                        comm.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
                 elif sign_index == 2:
                     sign = "stop"
                     if do_lanedetection == 0:
                         execute = "execute"
+                        sdata = "5t10|"
+                        comm.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
                 elif sign_index == 3:
                     sign = "left"
                     if do_lanedetection == 0:
                         execute = "execute"
+                        sdata = "1r0.2|"
+                        comm.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
                 elif sign_index == 4:
                     sign = "right"
                     if do_lanedetection == 0:
                         execute = "execute"
+                        sdata = "3r0.2|"
                     print(execute, sign, "sign at", dist, "meter")
                 elif sign_index == 5:
                     sign = "straight"
                     if do_lanedetection == 0:
                         execute = "execute"
+                        sdata = "2d0.2|"
+                        comm.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
 
             if do_lanedetection:
                 target = lanedetection.lanedetection(frame)
                 print(target)
+                sdata = "0x" + str(target[0]) + "|y" + str(target[1]) + "|"
+                # print(sdata)
+                comm.setsdata(sdata)
 
-            # print(sign_matrix)
+                # print(sign_matrix)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
