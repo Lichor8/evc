@@ -26,14 +26,20 @@
 #define CURRENT_LOAD 1
 
 const float pi = 3.14159;
+  
+// set inner/outer loop frequencies
+const float pcontrol_freq = 5.0;               // position controol loop frequency [1/s]
+const float scontrol_freq = 100.0;             // speed control loop frequency     [1/s]
+const float sensor_freq   = 1000.0;            // sensor sample loop frequency     [1/s]
+const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
 
+// set debug frequency
+const float debug_freq = 10;  // [1/s]
+  
+// functions
+void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, float turn_deg, float stop_sec)
+{  
 // initialize variables
-  // recieve rpi information
-  int mov_type = -1;
-  float x_d = 0.0;
-  float y_d = 1.0;
-  float turn_deg = 0;
-  float stop_sec = 0; 
   
   // location2angle (robot frame: x=right, y=upwards)
   float phi_a = pi/2; // using coordinate frame on the robot (relative) so actual is always pi/2
@@ -72,18 +78,6 @@ const float pi = 3.14159;
   //float c_l = 0.0;
   //float c_r = 0.0;
   
-  // set inner/outer loop frequencies
-  const float pcontrol_freq = 1.0;               // position controol loop frequency [1/s]
-  const float scontrol_freq = 200.0;             // speed control loop frequency     [1/s]
-  const float sensor_freq   = 10000.0;            // sensor sample loop frequency     [1/s]
-  const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
-  
-  // set debug frequency
-  const float debug_freq = 10;  // [1/s]
-  
-// functions
-void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, float turn_deg, float stop_sec)
-{  
   // inverse kinematics
   const float R = 0.07;         // [m]
   const float L = 0.45;         // [m]
@@ -94,8 +88,8 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is drive between lines (mov_type = 0) 
   if (mov_type == 0)
   {      
-    Serial.println(x_d);
-    Serial.println(y_d);
+    //Serial.println(x_d);
+    //Serial.println(y_d);
     // location2angle (use when actual location is available)
     //phi_a = pi;   
     //x_a   = 0.0;    
@@ -111,7 +105,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
     //Serial.println(theta_dot_d_r);
     
-    Serial.println("execute0");
+    //Serial.println("execute0");
   }    
   // if movement type is turn left (mov_type = 1)
   if (mov_type == 1)
@@ -260,7 +254,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   {
     float start_sensor_timer = millis();
   
-    // if i = 0, 5, 10, 15, ... then set start time
+    // if i = 5, 10, 15, ... then set start time
     if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
     {
       //Serial.println(i);
@@ -271,20 +265,20 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     int motor_encoder_l = digitalRead(2);
     int motor_encoder_r = digitalRead(3);
     
-    if(motor_encoder_l == 1 && motor_encoder_l_old == 0) 
+    if(motor_encoder_l == HIGH && motor_encoder_l_old == LOW) 
     {
       pulse_count_l++;      
     }
     motor_encoder_l_old = motor_encoder_l;       
      
-    if(motor_encoder_r == 1 && motor_encoder_r_old == 0) 
+    if(motor_encoder_r == HIGH && motor_encoder_r_old == LOW) 
     {
       pulse_count_r++;      
     }
     motor_encoder_r_old = motor_encoder_r;   
     
     // speed control loop (scontrol_freq)
-    // if i = 0, 5, 10, 15, ...
+    // if i = 5, 10, 15, ...
     if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
       {
         // calculate speed from motor encoders
@@ -333,11 +327,11 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
         setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR);
        
         // debug statements (debug_freq)
-        if (i == sensor_freq/(pcontrol_freq*debug_freq)*k)
-        {
-          Serial.println(dp);   // sample frequency increases dp?
-          k++; 
-        }      
+//        if (i == sensor_freq/(pcontrol_freq*debug_freq)*k)
+//        {
+//          Serial.println(MotorR);   // sample frequency increases dp?
+//          k++; 
+//        }      
         //if(theta_dot_a_l != 0)
         //{
         // Serial.println(theta_dot_a_l);

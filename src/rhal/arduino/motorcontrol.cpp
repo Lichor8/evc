@@ -32,13 +32,61 @@ float scontrol(float theta_dot_d, float theta_dot_a, float &e_old, float &E)
           
   // PID controller for c (duty cycle)
   const float Kp = 0.2;
-  const float Ki = 0.0;
+  const float Ki = 0.2;
   const float Kd = 0.0;
  
   float e = theta_dot_d - theta_dot_a;
   float e_dot = e - e_old;
   E = E + e;
   e_old = e;
+  
+  float c = Kp*e + Ki*E + Kd*e_dot;
+  if ( c > 1)
+  {
+    c = 1;
+  }
+  else if (c < -1)
+  {
+    c = -1;
+  }
+  return c;
+}
+
+float scontrol_l(float theta_dot_d, float theta_dot_a, float &e_old_l, float &E_l)
+{          
+  // PID controller for c (duty cycle)
+  const float Kp = 0.2;
+  const float Ki = 0.0;
+  const float Kd = 0.0;
+ 
+  float e = theta_dot_d - theta_dot_a;
+  float e_dot = e - e_old;
+  E_l = E_l + e;
+  e_old_l = e;
+  
+  float c = Kp*e + Ki*E + Kd*e_dot;
+  if ( c > 1)
+  {
+    c = 1;
+  }
+  else if (c < -1)
+  {
+    c = -1;
+  }
+  return c;
+}
+
+float scontrol_r(float theta_dot_d, float theta_dot_a, float &e_old_r, float &E_r)
+{          
+  // PID controller for c (duty cycle)
+  const float Kp = 0.2;
+  const float Ki = 0.0;
+  const float Kd = 0.0;
+ 
+  float e = theta_dot_d - theta_dot_a;
+  float e_dot = e - e_old;
+  E_r = E_r + e;
+  e_old_r = e;
   
   float c = Kp*e + Ki*E + Kd*e_dot;
   if ( c > 1)
