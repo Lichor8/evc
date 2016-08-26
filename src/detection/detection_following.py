@@ -16,10 +16,10 @@ class Point:
 debug = True
 
 
-def detect_square(frame):
+def detection_following(frame):
     pi_cam_x_angle = 54
     pi_cam_y_angle = 41
-    x_pos = 0
+    x_angle = 0
     dist = 0
 
     size_sign = 0.076
@@ -36,9 +36,9 @@ def detect_square(frame):
 
     # define range of colors in HSV
     lower_red = np.array([0, 120, 120])
-    upper_red = np.array([0, 255, 255])
-    lower_red2 = np.array([145, 120, 120])
-    upper_red2 = np.array([170, 255, 255])
+    upper_red = np.array([20, 255, 255])
+    lower_red2 = np.array([160, 120, 120])
+    upper_red2 = np.array([179, 255, 255])
 
     maskred1 = cv2.inRange(hsv, lower_red, upper_red)
     maskred2 = cv2.inRange(hsv, lower_red2, upper_red2)
@@ -77,7 +77,7 @@ def detect_square(frame):
     # shape detector
     cnts = cv2.findContours(thresh.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cnts = cnts[0] if imutils.is_cv2() else cnts[1]
-    sd = SquareDetector()
+    sd = ShapeDetector()
 
     # loop over the contours
     for c in cnts:
@@ -86,20 +86,21 @@ def detect_square(frame):
 
         M = cv2.moments(c)
         if M["m00"] > 100:
-            cX = int((M["m10"] / M["m00"]) * ratio)
-            cY = int((M["m01"] / M["m00"]) * ratio)
+            cX = int((M["m10"] / M["m00"]))
+            cY = int((M["m01"] / M["m00"]))
             # blobarea = cv2.contourArea(c) * ratio
             shape = sd.detect(c)
 
-            if shape == "square":
+            if shape == "red circle":
                 x, y, w, h = cv2.boundingRect(c)
-                x = int(x * ratio)
-                y = int(y * ratio)
-                w = int(w * ratio)
-                h = int(h * ratio)
+                # x = int(x * ratio)
+                # y = int(y * ratio)
+                # w = int(w * ratio)
+                # h = int(h * ratio)
+
                 signratio = size_sign / h
                 if debug:
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    cv2.rectangle(resized, (x, y), (x + w, y + h), (0, 255, 0), 2)
                 if y < 0.5 * H:
                     gamma = np.pi / 180 * abs(0.5 * H - y) / H * pi_cam_y_angle
                     distance = signratio * abs(0.5 * H - y) / math.tan(gamma)
@@ -108,29 +109,33 @@ def detect_square(frame):
                     distance = signratio * abs(0.5 * H - y - h) / math.tan(gamma)
 
                 c = c.astype("float")
-                c *= ratio
+                # c *= ratio
                 c = c.astype("int")
 
                 dist = distance
-                x_pos = pi_cam_x_angle*(cX - frame.shape[1]/2)/frame.shape[1]
+                x_angle = pi_cam_x_angle*(cX - resized.shape[1]/2)/resized.shape[1]
 
                 if debug:
-                    cv2.drawContours(frame, [c], -1, (0, 255, 0), 2)
-                    cv2.putText(frame, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                    cv2.drawContours(resized, [c], -1, (0, 255, 0), 2)
+                    cv2.putText(resized, shape, (cX, cY), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
                     disttext = str(round(distance, 3)) + "m"
-                    cv2.putText(frame, disttext, (cX, cY + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+                    cv2.circle(resized, (cX, cY), 1, (255, 0, 0), 8)
+
+                    cv2.line(resized, (0, int(0.5*resized.shape[0])), (resized.shape[1], int(0.5*resized.shape[0])), (255, 0, 255), 1)
+                    # cv2.line(resized, (0.5*W, 0), (0.5*W, H), (255, 0, 255), 1)
+                    cv2.putText(resized, disttext, (cX, cY + 15), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
     if debug:
-        cv2.imshow("Red", red)
+        # cv2.imshow("Red", red)
         # cv2.imshow("Blue", blue)
         # cv2.imshow("Yellow", yellow)
         # cv2.imshow("Treshold", thresh)
-        cv2.imshow("Video", frame)
+        cv2.imshow("Video", resized)
 
-    return [x_pos, dist]
+    return [x_angle, dist]
 
 
-class SquareDetector:
+class ShapeDetector:
     def __init__(self):
         pass
 
@@ -147,8 +152,8 @@ class SquareDetector:
 
         # if the shape has 4 vertices, it is either a square or
         # a rectangle
-        if 4 <= len(approx) <= 6 and areamin < area < areamax:
-            shape = "square"
+        if 6 <= len(approx) and areamin < area < areamax:
+            shape = "red circle"
 
         # return the name of the shape
         return shape
