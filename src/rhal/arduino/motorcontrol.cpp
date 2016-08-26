@@ -60,11 +60,11 @@ float scontrol_l(float theta_dot_d, float theta_dot_a, float &e_old_l, float &E_
   const float Kd = 0.0;
  
   float e = theta_dot_d - theta_dot_a;
-  float e_dot = e - e_old;
+  float e_dot_l = e - e_old_l;
   E_l = E_l + e;
   e_old_l = e;
   
-  float c = Kp*e + Ki*E + Kd*e_dot;
+  float c = Kp*e + Ki*E_l + Kd*e_dot_l;
   if ( c > 1)
   {
     c = 1;
@@ -84,11 +84,11 @@ float scontrol_r(float theta_dot_d, float theta_dot_a, float &e_old_r, float &E_
   const float Kd = 0.0;
  
   float e = theta_dot_d - theta_dot_a;
-  float e_dot = e - e_old;
+  float e_dot_r = e - e_old_r;
   E_r = E_r + e;
   e_old_r = e;
   
-  float c = Kp*e + Ki*E + Kd*e_dot;
+  float c = Kp*e + Ki*E_r + Kd*e_dot_r;
   if ( c > 1)
   {
     c = 1;

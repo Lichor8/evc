@@ -26,10 +26,14 @@
 #define CURRENT_LOAD 1
 
 const float pi = 3.14159;
+
+// intialize variables
+float E_l = 0.0;  
+float E_r = 0.0;
   
 // set inner/outer loop frequencies
-const float pcontrol_freq = 5.0;               // position controol loop frequency [1/s]
-const float scontrol_freq = 100.0;             // speed control loop frequency     [1/s]
+const float pcontrol_freq = 1.0;               // position controol loop frequency [1/s]
+const float scontrol_freq = 200.0;             // speed control loop frequency     [1/s]
 const float sensor_freq   = 1000.0;            // sensor sample loop frequency     [1/s]
 const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
 
@@ -67,8 +71,6 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // velocity control loop
   float e_old_l = 0.0;
   float e_old_r = 0.0;
-  float E_l = 0.0;  
-  float E_r = 0.0;
   float motor_encoder_srtime_l = 0.0;
   float motor_encoder_srtime_r = 0.0;
   float motor_encoder_srtime_l_previous = 0.0;
@@ -88,8 +90,8 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   // if movement type is drive between lines (mov_type = 0) 
   if (mov_type == 0)
   {      
-    //Serial.println(x_d);
-    //Serial.println(y_d);
+    Serial.println(x_d);
+    Serial.println(y_d);
     // location2angle (use when actual location is available)
     //phi_a = pi;   
     //x_a   = 0.0;    
@@ -105,7 +107,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     theta_dot_d_l = (2*v - omega*L)/(2*R);  // [rad/s]
     //Serial.println(theta_dot_d_r);
     
-    //Serial.println("execute0");
+    Serial.println("execute0");
   }    
   // if movement type is turn left (mov_type = 1)
   if (mov_type == 1)
@@ -254,8 +256,8 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   {
     float start_sensor_timer = millis();
   
-    // if i = 5, 10, 15, ... then set start time
-    if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
+    // if i = 0, 5, 10, 15, ... then set start time
+    if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j || i == 0)
     {
       //Serial.println(i);
       motor_encoder_srtime_l = millis();    
@@ -307,10 +309,10 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
 //        float c_r = Kp*e + Ki*E_r + Kd*e_dot_r;
         
         // calculate c (duty cycle) using scontrol() controller and transform to arduino motor voltages        
-        float c_l = scontrol(theta_dot_d_l, theta_dot_a_l, e_old_l, E_l);        
+        float c_l = scontrol_l(theta_dot_d_l, theta_dot_a_l, e_old_l, E_l);        
         int MotorL = 255*c_l;
         
-        float c_r = scontrol(theta_dot_d_r, theta_dot_a_r, e_old_r, E_r);
+        float c_r = scontrol_r(theta_dot_d_r, theta_dot_a_r, e_old_r, E_r);
         int MotorR = 255*c_r;         
        
         // turn motors completely off if a stop is issued
@@ -327,11 +329,11 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
         setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR);
        
         // debug statements (debug_freq)
-//        if (i == sensor_freq/(pcontrol_freq*debug_freq)*k)
-//        {
-//          Serial.println(MotorR);   // sample frequency increases dp?
-//          k++; 
-//        }      
+        if (i == sensor_freq/(pcontrol_freq*debug_freq)*k)
+        {
+          Serial.println(dp);   // sample frequency increases dp?
+          k++; 
+        }      
         //if(theta_dot_a_l != 0)
         //{
         // Serial.println(theta_dot_a_l);
