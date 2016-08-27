@@ -7,7 +7,7 @@ def initialize():
     # (at least the Uno does), so you need to wait a few seconds for it to start up.
 
     # initialize serial
-    ser = serial.Serial('/dev/ttyUSB1', 9600)
+    ser = serial.Serial('/dev/ttyUSB0', 9600)
     time.sleep(2)  # wait for Arduino
 
     return ser

@@ -28,17 +28,27 @@
 const float pi = 3.14159;
 
 // intialize variables
+// position loop
+int pulse_count_r_odom = 0;
+
+// sensor loop
+int motor_encoder_l_old = 0;    // otherwise if motor_encoder_l_old resets to 0 every loop one pulse count be counted twice
+int motor_encoder_r_old = 0;
+
+// speed control loop
+float E_p = 0.0;
 float E_l = 0.0;  
 float E_r = 0.0;
   
 // set inner/outer loop frequencies
 const float pcontrol_freq = 1.0;               // position controol loop frequency [1/s]
-const float scontrol_freq = 200.0;             // speed control loop frequency     [1/s]
-const float sensor_freq   = 1000.0;            // sensor sample loop frequency     [1/s]
-const float sensor_time   = 1000/sensor_freq;  // sensor sample time               [ms]
+const float scontrol_freq = 100.0;             // speed control loop frequency     [1/s]
+const float sensor_freq   = 5000.0;            // sensor sample loop frequency     [1/s]
+const float sensor_time   = 1000000/sensor_freq;  // sensor sample time               [us]
 
-// set debug frequency
+// debugging
 const float debug_freq = 10;  // [1/s]
+int pulse_count_test = 0;
   
 // functions
 void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, float turn_deg, float stop_sec)
@@ -53,22 +63,19 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   
   // position control loop
   float e_old_p = 0.0;
-  float E_p = 0.0;
   float omega = 0.0;
   float v     = 0.0;
   float stop_timer = 0.0;
   int pulse_count_start = 0;
   int execute_start = 1;
   
-  // encoder loop  
-  int motor_encoder_l_old = 0;
-  int motor_encoder_r_old = 0;
+  // sensor loop  
   int pulse_count_l = 0;
   int pulse_count_l_old = 0;
   int pulse_count_r = 0;
   int pulse_count_r_old = 0;
   
-  // velocity control loop
+  // speed control loop
   float e_old_l = 0.0;
   float e_old_r = 0.0;
   float motor_encoder_srtime_l = 0.0;
@@ -86,7 +93,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   float theta_dot_d_l = 0.0;  
   float theta_dot_d_r = 0.0;    
   
-  // act according to selected movement type
+///////////////////////////////////////////act according to selected movement type///////////////////////////////////////////
   // if movement type is drive between lines (mov_type = 0) 
   if (mov_type == 0)
   {      
@@ -115,7 +122,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     Serial.println(turn_r);
     if (execute_start = 1)
     {
-      pulse_count_start = pulse_count_r;
+      pulse_count_start = pulse_count_r_odom;
       execute_start = 0;      
     }
     omega = pi/4;               // turning speed [rad/s] 
@@ -125,7 +132,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     theta_dot_d_l = omega*r1;   // [rad/s]   
     
     // pulse2meters (12 magnets in sensor, gear ratio 34:1)
-    float dp = pulse_count_r - pulse_count_start;
+    float dp = pulse_count_r_odom - pulse_count_start;
     float ds = R*dp*2*pi/(12*34);   // [m]
     
     // if traveled distance is half a turn
@@ -247,21 +254,22 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
       Serial.println("execute5");
     }
   } 
-  
-  // sensor sample loop (sensor_freq)
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////sensor sample loop (sensor_freq)///////////////////////////////////////////
   int i = 0;
   int j = 1;
   int k = 1;
-  while(i < sensor_freq/pcontrol_freq)
+  while(i <= sensor_freq/pcontrol_freq) //i < sensor_freq/pcontrol_freq
   {
-    float start_sensor_timer = millis();
+    float start_sensor_timer = micros();
   
     // if i = 0, 5, 10, 15, ... then set start time
     if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j || i == 0)
     {
       //Serial.println(i);
-      motor_encoder_srtime_l = millis();    
-      motor_encoder_srtime_r = millis();
+      motor_encoder_srtime_l = micros();    
+      motor_encoder_srtime_r = micros();
     }   
     
     int motor_encoder_l = digitalRead(2);
@@ -269,17 +277,19 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
     
     if(motor_encoder_l == HIGH && motor_encoder_l_old == LOW) 
     {
-      pulse_count_l++;      
+      pulse_count_l++;  
+      pulse_count_test++;    
     }
     motor_encoder_l_old = motor_encoder_l;       
      
     if(motor_encoder_r == HIGH && motor_encoder_r_old == LOW) 
     {
-      pulse_count_r++;      
+      pulse_count_r++;
+      //pulse_count_test++;     
     }
     motor_encoder_r_old = motor_encoder_r;   
-    
-    // speed control loop (scontrol_freq)
+
+///////////////////////////////////////////speed control loop (scontrol_freq)///////////////////////////////////////////
     // if i = 5, 10, 15, ...
     if(i == sensor_freq/(pcontrol_freq*scontrol_freq)*j)
       {
@@ -288,7 +298,7 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
         float theta_dot_a_r = avelocity(motor_encoder_srtime_r_previous, pulse_count_r, pulse_count_r_old);
         
         // int to float problem?
-        float dp = pulse_count_r - pulse_count_r_old;  
+        float dp = pulse_count_l - pulse_count_l_old;  
         float ds = dp*2*pi/(12*34);   // [rad]
 
 //        // PID controller for c (duty cycle)
@@ -307,31 +317,39 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
 //        E_r = E_r + e;
 //        e_old_r = e;        
 //        float c_r = Kp*e + Ki*E_r + Kd*e_dot_r;
-        
+
+
         // calculate c (duty cycle) using scontrol() controller and transform to arduino motor voltages        
-        float c_l = scontrol_l(theta_dot_d_l, theta_dot_a_l, e_old_l, E_l);        
-        int MotorL = 255*c_l;
+        float c_l = scontrol(theta_dot_d_l, theta_dot_a_l, e_old_l, E_l);
+        float c_r = scontrol(theta_dot_d_r, theta_dot_a_r, e_old_r, E_r);
         
-        float c_r = scontrol_r(theta_dot_d_r, theta_dot_a_r, e_old_r, E_r);
-        int MotorR = 255*c_r;         
-       
-        // turn motors completely off if a stop is issued
-        if (mov_type == 5) 
+        if (mov_type == 0 || mov_type == 1 || mov_type == 2 || mov_type == 3 || mov_type == 4 || mov_type == 5)
         {
-          MotorL = 0;
-          MotorR = 0;
+                  
+          int MotorL = 255*c_l;         
+          int MotorR = 255*c_r;         
+         
+          // turn motors completely off if a stop is issued
+          if (mov_type == 5) 
+          {
+            MotorL = 0;
+            MotorR = 255;
+          }
+          
+          //Serial.println(c_l);
+          
+          // set motor voltages (minimum needed is 150?)
+          setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
+          setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR);
         }
-        
-        //Serial.println(c_l);
-        
-        // set motor voltages (minimum needed is 150?)
-        setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
-        setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR);
        
         // debug statements (debug_freq)
         if (i == sensor_freq/(pcontrol_freq*debug_freq)*k)
         {
-          Serial.println(dp);   // sample frequency increases dp?
+          Serial.println("e_r"); 
+          Serial.println("c_r");
+          Serial.println(theta_dot_d_r - theta_dot_a_r);   // sample frequency increases dp?
+          Serial.println(c_r);
           k++; 
         }      
         //if(theta_dot_a_l != 0)
@@ -347,14 +365,23 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
         pulse_count_r_old = pulse_count_r;
         j++;
       }
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
+        // debug statements (debug_freq)
+//    if (i == sensor_freq/(pcontrol_freq*debug_freq)*k)
+//        {
+//          Serial.println(MotorR);   // sample frequency increases dp?
+//          k++; 
+//        }
+        
     // use the read start time of one step before, the previous step
     motor_encoder_srtime_l_previous = motor_encoder_srtime_l;
     motor_encoder_srtime_r_previous = motor_encoder_srtime_r;
-      
+
     i++;
     sleep(sensor_time, start_sensor_timer);
-  }   
+  }
+  pulse_count_r_odom = pulse_count_r_odom + pulse_count_r; 
   
   // debug statements 1 Hz
   //Serial.println(pulse_count_l);    //a whole turn is 12*34 = 408 pulses
@@ -363,13 +390,14 @@ void movement(int mov_type, float x_d, float y_d, float turn_r, float drive_m, f
   //Serial.println(theta_dot_a_l);
   //Serial.println(c_l);
   //Serial.println(c_r);
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 }  
     
 void sleep(float sensor_time, float ts) 
 {
-  float te = millis();  
+  float te = micros();  
   while (abs(te-ts) < sensor_time) 
   {    
-    te = millis();
+    te = micros();
   } 
 }

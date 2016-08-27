@@ -7,7 +7,7 @@
 void pcontrol(float phi_d, float phi_a, float &omega, float &v, float &e_old, float &E)
 {  
   // PID controller for omega (rotation speed)
-  const float Kp = 1.0;
+  const float Kp = 0.01;
   const float Ki = 0.0;
   const float Kd = 0.0; 
   
@@ -31,9 +31,9 @@ float scontrol(float theta_dot_d, float theta_dot_a, float &e_old, float &E)
 //  float c = K[0]*x1 + K[1]*x2 + F*r
           
   // PID controller for c (duty cycle)
-  const float Kp = 0.2;
-  const float Ki = 0.2;
-  const float Kd = 0.0;
+  const float Kp = 0.1;
+  const float Ki = 0.01;
+  const float Kd = 0.02;
  
   float e = theta_dot_d - theta_dot_a;
   float e_dot = e - e_old;
@@ -55,7 +55,7 @@ float scontrol(float theta_dot_d, float theta_dot_a, float &e_old, float &E)
 float scontrol_l(float theta_dot_d, float theta_dot_a, float &e_old_l, float &E_l)
 {          
   // PID controller for c (duty cycle)
-  const float Kp = 0.2;
+  const float Kp = 1.0;
   const float Ki = 0.0;
   const float Kd = 0.0;
  
@@ -79,7 +79,7 @@ float scontrol_l(float theta_dot_d, float theta_dot_a, float &e_old_l, float &E_
 float scontrol_r(float theta_dot_d, float theta_dot_a, float &e_old_r, float &E_r)
 {          
   // PID controller for c (duty cycle)
-  const float Kp = 0.2;
+  const float Kp = 1.0;
   const float Ki = 0.0;
   const float Kd = 0.0;
  

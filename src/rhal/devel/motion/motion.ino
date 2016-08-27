@@ -8,9 +8,6 @@
 #define EN_R_BWD 6
 #define EN_R_FWD 7
 
-#define CURRENT_CHARGE 0
-#define CURRENT_LOAD 1
-
 //const float pi = 3.14159;
 
 void setMotor(const unsigned char cucPWM, const unsigned char cucFWD , const unsigned char cucBWD, const int ciSpeed)
@@ -52,8 +49,8 @@ void setup() {
 
 void loop() 
 { 
-  int MotorL = 255;
-  int MotorR = 255;
+  int MotorL = 0;
+  int MotorR = 0;
    
   setMotor(PWM_L, EN_L_FWD, EN_L_BWD, MotorL);
   setMotor(PWM_R, EN_R_FWD, EN_R_BWD, MotorR);
