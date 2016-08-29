@@ -37,7 +37,7 @@ while io_ok:
         # sdata = '2d1|'          # mov_type = 2 (drive),                 d (distance) in [m]
         # sdata = '3r0.2|'        # mov_type = 3 (turn right),            r (turn radius) in [m]
         # sdata = '4a180|'        # mov_type = 4 (turn),                  a (angle) in [deg]
-        # sdata = '5t10|'          # mov_type = 5 (stop),                  t (time) in [s]
+        # sdata = '5t5|'          # mov_type = 5 (stop),                  t (time) in [s]
 
         rhal.setsdata(sdata)
 

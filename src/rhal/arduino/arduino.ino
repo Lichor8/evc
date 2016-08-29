@@ -49,8 +49,8 @@ void loop()
   float y_d = 1.0;
   float turn_r = 0.0;
   float drive_m = 0.0;
-  float turn_deg = 0;
-  float stop_sec = 0;  
+  float turn_deg = 0.0;
+  float stop_sec = 0.0;  
   
   // position(outer) control loop (pcontrol_freq)
   while(1)
