@@ -7,10 +7,20 @@ ping rasbperryr
 # ping rpi using ip address
 ping <ip_address>
 
-# set temporary ip address
+# connect directly via LAN cable by setting temporary ip addresses on both devices 
 (https://help.ubuntu.com/lts/serverguide/network-configuration.html)
+(https://www.raspberrypi.org/forums/viewtopic.php?f=28&t=22716)
+(need to be in the same range:
+Class A	10.0.0.0	to	10.255.255.255
+Class B	172.16.0.0	to	172.31.255.255
+Class C	192.168.0.0	to	192.168.255.255)
+# on rpi (check ifconfig for the right device name)
 sudo ifconfig eth0 10.0.0.100 netmask 255.255.255.0
 sudo route add default gw 10.0.0.1 eth0
+# on pc (check ifconfig for the right device name)
+sudo ifconfig eth0 10.0.0.101 netmask 255.255.255.0
+sudo route add default gw 10.0.0.1 eth0
+# when finished
 ip addr flush eth0
 
 # connect via secure connection as user pi with X forwarding
