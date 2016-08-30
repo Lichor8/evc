@@ -40,5 +40,26 @@ chmod +x opencv_install.sh
 https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/ 
 
 ## remote desktop using vnc
-https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-16-04 
-https://learn.adafruit.com/adafruit-raspberry-pi-lesson-7-remote-control-with-vnc/running-vncserver-at-startup
+ (don't use, verry slow)(https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-16-04)
+(https://learn.adafruit.com/adafruit-raspberry-pi-lesson-7-remote-control-with-vnc/running-vncserver-at-startup)
+
+# install vnc server on rpi
+sudo apt-get install tightvncserver
+
+# configure vncserver
+vncserver
+
+# auto start vncserver at boot
+cd /home/pi/.conf
+mkdir autostart
+cd autostart
+
+# create auto start file 
+nano tightvnc.desktop
+
+# copy paste content and save
+[Desktop Entry]
+Type=Application
+Name=TightVNC
+Exec=vncserver :1
+StartupNotify=false
