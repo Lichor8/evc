@@ -5,7 +5,9 @@ sudo raspi-config
 # update and install basic software
 sudo apt-get update
 sudo apt-get upgrade
-sudo apt-get install gedit
+
+## install git
+sudo apt-get install git
 
 ## OpenJDK (java)
 # only Java Runtime Environment
@@ -45,6 +47,9 @@ https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostap
 
 # install vnc server on rpi
 sudo apt-get install tightvncserver
+
+# install vnc viewer on client pc
+sudo apt-get install vncviewer
 
 # configure vncserver
 vncserver
