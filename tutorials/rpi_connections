@@ -7,6 +7,12 @@ ping rasbperryr
 # ping rpi using ip address
 ping <ip_address>
 
+# set temporary ip address
+(https://help.ubuntu.com/lts/serverguide/network-configuration.html)
+sudo ifconfig eth0 10.0.0.100 netmask 255.255.255.0
+sudo route add default gw 10.0.0.1 eth0
+ip addr flush eth0
+
 # connect via secure connection as user pi with X forwarding
 ssh pi@172.24.1.1 -X
 
