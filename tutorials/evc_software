@@ -9,3 +9,25 @@ sudo apt-get install openjdk-8-jdk package
 tar xfz pycharm-2016.1.2.tar.gz 
 # run 'pycharm.sh' in bin directory
 ./pycharm.sh
+
+## Arduino
+# older version
+sudo apt-get install arduino
+
+# download newest version (check https://www.arduino.cc/en/Main/Software for version number) and move to /opt/ directory for global use
+cd ~/Downloads
+tar -xvf arduino-1.6.11-*.tar.xz
+sudo mv arduino-1.6.11 /opt
+cd /opt/arduino-1.6.11/
+chmod +x install.sh
+./install.sh
+
+## opencv3 + python3
+chmod +x opencv_install.sh
+./opencv_install.sh
+
+## Wifi access point
+https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/ 
+
+## remote desktop using vnc
+https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-16-04 
