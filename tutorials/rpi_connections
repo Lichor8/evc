@@ -1,8 +1,11 @@
 # network status
 ifconfig
 
-# ping hostname
+# ping rpi using hostname
 ping rasbperryr
+
+# ping rpi using ip address
+ping <ip_address>
 
 # connect via secure connection as user pi with X forwarding
 ssh pi@172.24.1.1 -X
