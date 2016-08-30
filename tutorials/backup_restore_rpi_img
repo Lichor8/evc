@@ -6,7 +6,7 @@ sudo fdisk -l
 # take note of the name (sdc for example)
 /dev/sdc
 
-# copy everything bit by bit using dd command (block size=4MB) to an .img file
+# copy (backup) everything bit by bit using dd command (block size=4MB) to an .img file
 sudo dd if=/dev/sdc of=~/image.img
 
 # copy everything bit by bit using dd command (block size=4MB) to an .img file and compress using gzip, creating a .gz file
