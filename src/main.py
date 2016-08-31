@@ -41,6 +41,7 @@ def splittedname(s):
 io_ok = 1
 io_read = 1
 challenge = 1
+ini = 1
 
 # main loop (run while robot receives inputs)
 while io_ok:
@@ -51,7 +52,7 @@ while io_ok:
             # trigger coordinator/composer of rhal
             rhal.rhal()
             rdata = rhal.get_rdata()
-            # print(rdata)
+            print(rdata)
 
             # split and compare two strings to enable if statement
             rdata_split = splittedname(rdata)
@@ -60,8 +61,9 @@ while io_ok:
             # execute_split = [splittedname('execute1\r\n'), splittedname('execute2\r\n'), splittedname('execute3\r\n'),
             #                  splittedname('execute4\r\n'), splittedname('execute5\r\n')]
 
-            if rdata_split in do_strat_if:
-                strat.strategy()
+            if rdata_split in do_strat_if or ini:
+                strat.strategy(rhal)
+                ini = 0
 
         else:               # following mode
             fol.follow()

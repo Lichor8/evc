@@ -12,11 +12,11 @@ from rhal import rhal
 # from detection import gapdetection
 # from detection import lineclustering
 
-comm = rhal.Rhal()
+# rhal = rhal.Rhal()
 
 class Strategy:
     # coordinator/composer
-    def strategy(self):
+    def strategy(self, rhal):
 
         # initialise
         sign_matrix = np.zeros(shape=(3, 5))    # matrix for storing traffic sign data [distance]
@@ -62,21 +62,21 @@ class Strategy:
                     if do_lanedetection == 0:
                         execute = "execute"
                         sdata = "4a180|"
-                        comm.setsdata(sdata)
+                        rhal.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
                 elif sign_index == 2:
                     sign = "stop"
                     if do_lanedetection == 0:
                         execute = "execute"
                         sdata = "5t10|"
-                        comm.setsdata(sdata)
+                        rhal.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
                 elif sign_index == 3:
                     sign = "left"
                     if do_lanedetection == 0:
                         execute = "execute"
                         sdata = "1r0.2|"
-                        comm.setsdata(sdata)
+                        rhal.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
                 elif sign_index == 4:
                     sign = "right"
@@ -89,7 +89,7 @@ class Strategy:
                     if do_lanedetection == 0:
                         execute = "execute"
                         sdata = "2d0.2|"
-                        comm.setsdata(sdata)
+                        rhal.setsdata(sdata)
                     print(execute, sign, "sign at", dist, "meter")
 
             if do_lanedetection:
@@ -97,7 +97,7 @@ class Strategy:
                 print(target)
                 sdata = "0x" + str(target[0]) + "|y" + str(target[1]) + "|"
                 # print(sdata)
-                comm.setsdata(sdata)
+                rhal.setsdata(sdata)
 
                 # print(sign_matrix)
 
