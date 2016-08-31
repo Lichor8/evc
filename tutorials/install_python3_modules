@@ -1,5 +1,5 @@
 ### pip
-# install pip3
+# install pip3 (or under the virtualenv cv, when needed there)
 sudo apt-get install python3-pip
 
 ### imutils
@@ -7,7 +7,7 @@ sudo apt-get install python3-pip
 1. in pycharm select interpreter as virtualenvs
 2. add (plus sign) imutils (this installs it directly under virtualenvs)
 
-## in terminal
+## in terminal (or under the virtualenv cv, when needed there)
 # install imutils for python3
 sudo pip3 install imutils
 
@@ -19,7 +19,7 @@ sudo pip install imutils
 1. in pycharm select interpreter as virtualenvs
 2. add (plus sign) pyserial (this installs it directly under virtualenvs)
 
-## in terminal
+## in terminal (or under the virtualenv cv, when needed there)
 # install pyserial for python3
 sudo pip3 install pyserial
 

@@ -17,6 +17,9 @@ workon cv
 python main.py
 python3 main.py
 
+# if error is still cannot find module cv2, then add these few lines in the main.py (it doesn't know this folder existed and needed to be looked in) (permanent fix might be available too, by adding this path to python somewhere)
+import sys
+sys.path.append('/usr/local/lib/python3.5/site-packages')
 
 (https://www.digitalocean.com/community/tutorials/common-python-tools-using-virtualenv-installing-with-pip-and-managing-packages)
 (http://docs.python-guide.org/en/latest/dev/virtualenvs/)
