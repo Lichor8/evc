@@ -18,11 +18,11 @@ class Rhal:
     def __init__(self):
 
         # initialize io
-        self.ser = []
+        self.ser = io.initialize()
 
         # rpi_arduino_com (inputs/outputs)
-        self.rdata = []
-        self.sdata = []
+        self.rdata = ''
+        self.sdata = ''
 
     # monitor
     # def monitor(self):

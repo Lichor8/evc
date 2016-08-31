@@ -3,8 +3,19 @@ import rhal.rhal
 import detection.detection
 import strategy.strategy
 import strategy.following_strategy
+
 # compare strings with numbers
 import re
+
+def tryint(x):
+    try:
+        return int(x)
+    except ValueError:
+        return x
+
+
+def splittedname(s):
+    return tuple(tryint(x) for x in re.split('([0-9]+)', s))
 
 # create robot objects from classes
 rhal = rhal.rhal.Rhal()
@@ -24,7 +35,7 @@ def splittedname(s):
     return tuple(tryint(x) for x in re.split('([0-9]+)', s))
 
 # initialize io
-# rhal.io()
+#rhal.io()
 
 # check robot io
 io_ok = 1
@@ -55,9 +66,20 @@ while io_ok:
         else:               # following mode
             fol.follow()
 
-        # print(det.gettarget())
-        # gappos = det.getgappos()
-        # print("correct gapposition",gappos)
+        # set data to send to arduino
+        # sdata = '0x0|y1|'       # mov_type = 0 (drive between lines),   xy (goal location) in [m]
+        # sdata = '1r0.2|'        # mov_type = 1 (turn left),             r (turn radius) in [m]
+        # sdata = '2d1|'          # mov_type = 2 (drive),                 d (distance) in [m]
+        # sdata = '3r0.2|'        # mov_type = 3 (turn right),            r (turn radius) in [m]
+        # sdata = '4a180|'        # mov_type = 4 (turn),                  a (angle) in [deg]
+        # sdata = '5t5|'          # mov_type = 5 (stop),                  t (time) in [s]
+
+        # rhal.setsdata(sdata)
+
+        # trigger coordinator/composer of rhal
+        # rhal.rhal()
+        # rdata = rhal.get_rdata()
+        # print(rdata)
 
         # stop main loop
         # break

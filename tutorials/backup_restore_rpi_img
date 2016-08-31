@@ -1,0 +1,26 @@
+# check which drive the sd card is on
+df -h
+or
+sudo fdisk -l
+
+# take note of the name (sdc for example)
+/dev/sdc
+
+# copy (backup) everything bit by bit using dd command (block size=4MB) to an .img file
+sudo dd if=/dev/sdc of=~/image.img
+
+# copy everything bit by bit using dd command (block size=4MB) to an .img file and compress using gzip, creating a .gz file
+sudo dd bs=4M if=/dev/sdc | gzip > /home/your_username/image`date +%d%m%y`.gz
+
+# to restore the backup first unmount the two partitions then copy back then check if linux is done writing before unmounting
+sudo umount /dev/sdc1
+sudo umount /dev/sdc2
+sudo dd bs=4M if=/home/your_username/image of=/dev/sdc
+sudo sync
+
+# to restore the compressed backup
+sudo umount /dev/sdc1
+sudo umount /dev/sdc2
+sudo gzip -dc /home/your_username/image.gz | sudo dd bs=4M of=/dev/sdc
+sudo sync
+

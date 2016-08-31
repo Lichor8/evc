@@ -1,3 +1,14 @@
+## reinstall
+# expand file system, enable pi camera and enable ssh server
+sudo raspi-config
+
+# update and install basic software
+sudo apt-get update
+sudo apt-get upgrade
+
+## install git
+sudo apt-get install git
+
 ## OpenJDK (java)
 # only Java Runtime Environment
 sudo apt-get install openjdk-8-jre
@@ -5,7 +16,55 @@ sudo apt-get install openjdk-8-jre
 sudo apt-get install openjdk-8-jdk package
 
 ## Pycharm
+# download pycharm from www.jetbrains.com/pycharm
 # unzip
 tar xfz pycharm-2016.1.2.tar.gz 
 # run 'pycharm.sh' in bin directory
 ./pycharm.sh
+
+## Arduino
+# older version
+sudo apt-get install arduino
+
+# download newest version (check https://www.arduino.cc/en/Main/Software for version number) and move to /opt/ directory for global use
+cd ~/Downloads
+tar -xvf arduino-1.6.11-*.tar.xz
+sudo mv arduino-1.6.11 /opt
+cd /opt/arduino-1.6.11/
+chmod +x install.sh
+./install.sh
+
+## opencv3 + python3
+chmod +x opencv_install.sh
+./opencv_install.sh
+
+## Wifi access point
+https://frillip.com/using-your-raspberry-pi-3-as-a-wifi-access-point-with-hostapd/ 
+
+## remote desktop using vnc
+ (don't use, verry slow)(https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-vnc-on-ubuntu-16-04)
+(https://learn.adafruit.com/adafruit-raspberry-pi-lesson-7-remote-control-with-vnc/running-vncserver-at-startup)
+
+# install vnc server on rpi
+sudo apt-get install tightvncserver
+
+# install vnc viewer on client pc
+sudo apt-get install vncviewer
+
+# configure vncserver
+vncserver
+
+# auto start vncserver at boot
+cd /home/pi/.conf
+mkdir autostart
+cd autostart
+
+# create auto start file 
+nano tightvnc.desktop
+
+# copy paste content and save
+[Desktop Entry]
+Type=Application
+Name=TightVNC
+Exec=vncserver :1
+StartupNotify=false

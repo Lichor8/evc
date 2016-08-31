@@ -1,0 +1,23 @@
+(http://raspberrypi.stackexchange.com/questions/30056/raspberry-pi-raspbian-multiple-desktops)
+In preference, there is Main Menu Editor use that to have Desktop Preference visible so you can change back to default right-click menus.
+
+To set up multiple desktops do the following:
+
+1. Click Menu,
+2. Then Preferences;
+3. Then Windows Settings;
+4. From the Configuration manager choose Desktops in the left hand column;
+5. Select the desired Number of Desktops;
+6. Then click Close.
+
+You now have multiple desktops, However, the GUI does not give any indication of this and you need to remember the keyboard shortcuts to use them: Ctrl + Alt + Left/Right will switch to the next desktop. To make this more usable do the following:
+
+1. Right Click on the menu bar at the top of the screen;
+2. Select Add/Remove Panel Items;
+3. Select the Panel Applets Tab;
+4. Click the Add button;
+5. Choose Desktop Pager from the list;
+6. Optional, choose Desktop Number/Workspace Name;
+7. Click Close.
+
+This will add a panel applet to the menu bar (far right by default) that will allow you to click and switch between the desktops.

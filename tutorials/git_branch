@@ -10,6 +10,12 @@ git checkout -b new_branch old_branch
 #add branch to remote origin (gitlab) and track changes (-u)?
 git push -u origin <branch-name>
 
+#delete local branch
+git branch -d <branch-name>
+
+#delete remote origin (gitlab) branch (--delete is same as -d)
+git push origin --delete <branch-name>
+
 #to got to the new branch
 git checkout <branch-name>
 
@@ -18,3 +24,14 @@ git checkout master
 
 #to show a list of all available local branches
 git branch
+
+#merge branches (topic to master)
+git checkout master
+git merge topic
+git pull
+(fix conflicts)
+git commit
+git push
+
+#untrack files (The --cached will prevent it from having any effect on your working copy and it will just mark as removed the next time you commit)
+git rm --cached <file-name>
