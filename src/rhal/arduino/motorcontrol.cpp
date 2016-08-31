@@ -7,7 +7,7 @@
 void pcontrol(float phi_d, float phi_a, float &omega, float &v, float &e_old, float &E)
 {  
   // PID controller for omega (rotation speed)
-  const float Kp = 0.01;
+  const float Kp = 0.1;
   const float Ki = 0.0;
   const float Kd = 0.0; 
   

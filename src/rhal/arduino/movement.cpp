@@ -56,7 +56,7 @@ const float sensor_freq   = 5000.0;            // sensor sample loop frequency  
 const float sensor_time   = 1000000/sensor_freq;  // sensor sample time               [us]
 
 // debugging
-const int debug = 1;          // turn debugging on or off
+const int debug = 0;          // turn debugging on or off
 const float debug_freq = 10;  // [1/s]
 int pulse_count_test = 0;
   
