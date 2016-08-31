@@ -20,7 +20,7 @@ rhal = rhal.rhal.Rhal()
 det = detection.detection.Detection()
 
 # initialize io
-rhal.io()
+#rhal.io()
 
 # check robot io
 io_ok = 1
